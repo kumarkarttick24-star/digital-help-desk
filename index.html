@@ -329,7 +329,17 @@ border-bottom:1px solid #edf0f4
 }
 
 .total-row strong{font-size:17px}
+.balance-due-row{
+background:#fff8df;
+padding:10px 12px;
+border-radius:6px;
+font-weight:bold;
+}
 
+.balance-due-row strong{
+font-size:18px;
+font-weight:800;
+}
 .qr-section{
 text-align:center;
 margin:25px auto 10px;
@@ -371,6 +381,12 @@ margin-top:22px;
 border-top:1px solid #ddd;
 padding-top:17px
 }
+.services-last-page{
+break-before:page;
+page-break-before:always;
+min-height:260mm;
+padding-top:10mm;
+}   
 
 .service-list h3{
 color:var(--primary);
@@ -456,6 +472,16 @@ margin:0 4px
 .service-list-grid{columns:1}
 }
 
+@page{
+size:A4;
+margin:12mm;
+}
+
+@page{
+size:A4;
+margin:12mm;
+}
+
 @media print{
 body *{visibility:hidden}
 
@@ -477,8 +503,30 @@ width:100%
 box-shadow:none;
 border:0;
 max-width:none;
-margin:0
+margin:0;
+padding:0
 }
+
+.services-last-page{
+break-before:page;
+page-break-before:always;
+min-height:260mm;
+padding-top:0;
+}
+
+.services-last-page .service-list{
+margin-top:0;
+}
+
+.services-last-page .service-list-grid{
+columns:3;
+column-gap:25px;
+}
+
+.services-last-page .service-list-grid div{
+break-inside:avoid;
+}
+
 }
 </style>
 </head>
@@ -489,7 +537,7 @@ margin:0
 
 <div class="brand">
 <h1>GHAR BAITHKE DIGISEVA</h1>
-<p>Digital Services • Billing • Work Management</p>
+<p>Your Trusted Partner for Digital Services.</p>
 </div>
 
 <div class="whatsapp">
@@ -704,7 +752,8 @@ Customer se received har kaam ko track karo, pending se done tak.
 
 <div class="field">
 <label>Work / Service *</label>
-<select id="taskService"></select>
+<input id="taskService" list="taskServiceList" placeholder="Search service...">
+<datalist id="taskServiceList"></datalist>
 </div>
 
 <div class="field">
@@ -872,7 +921,8 @@ Professional invoice generate karo.
 
 <label>Service / Work</label>
 
-<select id="serviceSelect"></select>
+<input id="serviceSelect" list="billServiceList" placeholder="Search service...">
+<datalist id="billServiceList"></datalist>
 
 </div>
 
@@ -1038,6 +1088,7 @@ oninput="renderCustomers()">
 <th>Total Work Value</th>
 <th>Paid</th>
 <th>Due</th>
+<th>Action</th>
 </tr>
 
 </thead>
@@ -1300,7 +1351,7 @@ value="GHAR BAITHKE DIGISEVA">
 <div class="field">
 <label>Your Name</label>
 <input id="settingName"
-value="Kumar">
+value="KARTTICK CHANDRA PATRA">
 </div>
 
 <div class="field">
@@ -1532,13 +1583,21 @@ rates:{},
 
 settings:{
 business:"GHAR BAITHKE DIGISEVA",
-name:"Kumar",
+name:"KARTTICK CHANDRA PATRA",
 whatsapp:"7327933225",
 qr:""
-}
-
+},
+customers:[],
+deletedCustomers:[]
 };
 
+data.customers=Array.isArray(data.customers)?data.customers:[];
+data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers:[];
+
+if(data.settings && data.settings.name==="Kumar"){
+data.settings.name="KARTTICK CHANDRA PATRA";
+saveData();
+}
 
 services.forEach(s=>{
 
@@ -1682,46 +1741,41 @@ String(count).padStart(2,"0");
 
 function populateServiceDropdowns(){
 
-const billSelect=
-document.getElementById("serviceSelect");
+const billList=
+document.getElementById("billServiceList");
 
-const taskSelect=
-document.getElementById("taskService");
+const taskList=
+document.getElementById("taskServiceList");
 
-billSelect.innerHTML=
-'<option value="">Select Service</option>';
-
-taskSelect.innerHTML=
-'<option value="">Select Service</option>';
+billList.innerHTML="";
+taskList.innerHTML="";
 
 services.forEach((s,i)=>{
 
 const o1=document.createElement("option");
-
 o1.value=s;
-o1.textContent=(i+1)+". "+s;
-
-billSelect.appendChild(o1);
-
+o1.label=(i+1)+". "+s;
+billList.appendChild(o1);
 
 const o2=document.createElement("option");
-
 o2.value=s;
-o2.textContent=(i+1)+". "+s;
-
-taskSelect.appendChild(o2);
+o2.label=(i+1)+". "+s;
+taskList.appendChild(o2);
 
 });
 
+const billInput=document.getElementById("serviceSelect");
 
-billSelect.addEventListener(
-"change",
+billInput.addEventListener(
+"input",
 ()=>{
 
-const s=billSelect.value;
+const s=billInput.value;
 
+if(services.includes(s)){
 document.getElementById("serviceRate").value=
 data.rates[s]||"";
+}
 
 });
 
@@ -2014,6 +2068,22 @@ paymentMode:mode
 
 data.bills.push(bill);
 
+const customerKey=
+(name+"|"+mobile).toLowerCase();
+
+data.customers=
+data.customers.filter(c=>
+(c.name+"|"+(c.mobile||"")).toLowerCase()!==customerKey
+);
+
+data.customers.push({
+name,
+mobile
+});
+
+data.deletedCustomers=
+data.deletedCustomers.filter(k=>k!==customerKey);
+
 saveData();
 
 renderBillPreview(bill);
@@ -2036,6 +2106,25 @@ behavior:"smooth"
 /* =========================================================
    BILL PREVIEW
 ========================================================= */
+
+function printBill(customerName,billNo){
+
+customerName=decodeURIComponent(customerName);
+
+const oldTitle=document.title;
+
+document.title=
+String(customerName||"Customer")
+.trim()+" - Bill "+billNo;
+
+window.print();
+
+setTimeout(()=>{
+document.title=oldTitle;
+},1000);
+
+}
+
 
 function renderBillPreview(bill){
 
@@ -2108,17 +2197,15 @@ ${escapeHtml(data.settings.business)}
 </h2>
 
 <p>
+<strong>Your Trusted Partner for Digital Services.</strong>
+</p>
+
+<p>
 <strong>${escapeHtml(data.settings.name)}</strong>
 </p>
 
 <p>
 WhatsApp: ${escapeHtml(data.settings.whatsapp)}
-</p>
-
-<p>
-<strong>
-Aap Ghar Baithiye, Kaam Hum Karenge.
-</strong>
 </p>
 
 </div>
@@ -2131,7 +2218,7 @@ Aap Ghar Baithiye, Kaam Hum Karenge.
 ${bill.billNo}
 </div>
 
-<div>
+<div style="text-align:right">
 <strong>Date:</strong>
 ${displayDate(bill.date)}
 </div>
@@ -2141,7 +2228,7 @@ ${displayDate(bill.date)}
 ${escapeHtml(bill.customerName)}
 </div>
 
-<div>
+<div style="text-align:right">
 <strong>Mobile:</strong>
 ${escapeHtml(bill.mobile||"-")}
 </div>
@@ -2185,7 +2272,7 @@ ${items}
 <strong>${money(bill.paid)}</strong>
 </div>
 
-<div class="total-row">
+<div class="total-row balance-due-row">
 <span>Balance Due</span>
 <strong>${money(bill.due)}</strong>
 </div>
@@ -2195,11 +2282,6 @@ ${items}
 <span class="status ${statusClass}">
 ${bill.status}
 </span>
-</div>
-
-<div class="total-row">
-<span>Payment Mode</span>
-<strong>${escapeHtml(bill.paymentMode)}</strong>
 </div>
 
 </div>
@@ -2215,8 +2297,32 @@ ${qr}
 UPI Payment
 </p>
 
+<p style="font-size:10px;color:#455164;margin:10px 0 0;line-height:1.5">
+<strong>You can also pay directly on 7327933225</strong><br>
+via PhonePe, Paytm, Google Pay, Super Money or any other UPI app.
+</p>
+
 </div>
 
+
+<div class="footer-note">
+
+Thank you for choosing
+<strong>${escapeHtml(data.settings.business)}</strong>.
+
+<br>
+
+Same Day Service is subject to government portal/server availability.
+
+<br>
+
+WhatsApp:
+<strong>${escapeHtml(data.settings.whatsapp)}</strong>
+
+</div>
+
+
+<div class="services-last-page">
 
 <div class="service-list">
 
@@ -2230,29 +2336,13 @@ ${serviceList}
 
 </div>
 
-
-<div class="footer-note">
-
-Thank you for choosing
-<strong>${escapeHtml(data.settings.business)}</strong>.
-
-<br>
-
-Same Day Service is subject to
-government portal/server availability.
-
-<br>
-
-WhatsApp:
-<strong>${escapeHtml(data.settings.whatsapp)}</strong>
-
 </div>
 
 
 <div class="actions no-print">
 
 <button class="btn btn-primary"
-onclick="window.print()">
+onclick="printBill('${encodeURIComponent(bill.customerName)}','${bill.billNo}')">
 🖨 Print / Save PDF
 </button>
 
@@ -2312,7 +2402,7 @@ Advance Paid: ${money(bill.paid)}
 Balance Due: ${money(bill.due)}
 Status: ${bill.status}
 
-Aap Ghar Baithiye, Kaam Hum Karenge.
+Your Trusted Partner for Digital Services.
 `;
 
 
@@ -3000,6 +3090,39 @@ behavior:"smooth"
    CUSTOMERS
 ========================================================= */
 
+function customerKey(name,mobile){
+
+return(
+String(name||"")+"|"+
+String(mobile||"")
+).toLowerCase();
+
+}
+
+
+function deleteCustomer(name,mobile){
+
+const key=customerKey(name,mobile);
+
+if(!confirm(
+"Delete this customer from the customer list?\n\nExisting bills and work records will NOT be deleted."
+))return;
+
+if(!data.deletedCustomers.includes(key))
+data.deletedCustomers.push(key);
+
+data.customers=
+data.customers.filter(c=>
+customerKey(c.name,c.mobile)!==key
+);
+
+saveData();
+
+renderCustomers();
+
+}
+
+
 function renderCustomers(){
 
 const q=
@@ -3010,10 +3133,11 @@ document.getElementById("customerSearch")
 
 const map={};
 
-
 data.bills.forEach(b=>{
 
-const key=b.customerName.toLowerCase();
+const key=customerKey(b.customerName,b.mobile);
+
+if(data.deletedCustomers.includes(key))return;
 
 if(!map[key]){
 
@@ -3036,6 +3160,28 @@ map[key].due+=b.due;
 });
 
 
+data.customers.forEach(c=>{
+
+const key=customerKey(c.name,c.mobile);
+
+if(data.deletedCustomers.includes(key))return;
+
+if(!map[key]){
+
+map[key]={
+name:c.name,
+mobile:c.mobile,
+bills:0,
+total:0,
+paid:0,
+due:0
+};
+
+}
+
+});
+
+
 const customers=
 Object.values(map).filter(c=>
 !q||
@@ -3052,7 +3198,7 @@ if(!customers.length){
 
 tbody.innerHTML=
 `<tr>
-<td colspan="6" class="empty">
+<td colspan="7" class="empty">
 No customers found.
 </td>
 </tr>`;
@@ -3083,6 +3229,14 @@ ${escapeHtml(c.mobile||"-")}
 <td>${money(c.paid)}</td>
 
 <td>${money(c.due)}</td>
+
+<td>
+<button
+class="btn btn-danger"
+onclick="deleteCustomer(decodeURIComponent('${encodeURIComponent(c.name)}'),decodeURIComponent('${encodeURIComponent(c.mobile||"")}'))">
+Delete
+</button>
+</td>
 
 </tr>
 
@@ -3361,7 +3515,7 @@ document.getElementById("settingBusiness")
 data.settings.name=
 document.getElementById("settingName")
 .value.trim()||
-"Kumar";
+"KARTTICK CHANDRA PATRA";
 
 data.settings.whatsapp=
 document.getElementById("settingWhatsapp")
@@ -3504,10 +3658,13 @@ data=restored;
 
 data.settings=data.settings||{
 business:"GHAR BAITHKE DIGISEVA",
-name:"Kumar",
+name:"KARTTICK CHANDRA PATRA",
 whatsapp:"7327933225",
 qr:""
 };
+
+data.customers=Array.isArray(data.customers)?data.customers:[];
+data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers:[];
 
 
 saveData();
