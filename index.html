@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Ghar Baithke Digiseva | Billing System</title>
+<title>Digital Help Desk | Billing System</title>
 
 <style>
 :root{
@@ -204,8 +204,34 @@ font-weight:bold
 .btn-green{background:var(--green);color:white}
 .btn-light{background:#eef3f8;color:#23415f}
 .btn-danger{background:#fde9ea;color:#b9232b}
+
+.delete-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.delete-modal.show{display:flex}
+.delete-modal-box{background:#fff;width:min(430px,100%);border-radius:12px;padding:22px;box-shadow:0 15px 45px rgba(0,0,0,.2)}
+.delete-modal-box h3{margin:0 0 10px;color:#b9232b}
+.delete-modal-box p{margin:0 0 18px;line-height:1.5;color:#4b5563;white-space:pre-line}
+.delete-modal-actions{display:flex;justify-content:flex-end;gap:10px}
 .btn-warning{background:#fff4d8;color:#8c5a00}
 .btn-blue{background:#eaf2fb;color:#145c91}
+
+
+.service-picker{position:relative;width:100%}
+.service-picker-input{width:100%;border:1px solid #cfd7e2;border-radius:7px;padding:10px 11px;background:#fff;outline:none}
+.service-picker-input:focus{border-color:#1769aa;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
+.service-picker-menu{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #cfd7e2;border-radius:8px;box-shadow:0 12px 28px rgba(18,59,114,.16);max-height:280px;overflow:auto;z-index:500;display:none}
+.service-picker-menu.show{display:block}
+.service-option{display:flex;align-items:center;gap:9px;padding:9px 11px;cursor:pointer;font-size:13px;color:#25324a}
+.service-option:hover{background:#f2f7fc}
+.service-option input{accent-color:#1769aa}
+.service-option-number{width:28px;flex:0 0 28px;color:#687386;font-size:11px}
+.service-option-name{flex:1}
+.service-selected{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.service-chip{display:inline-flex;align-items:center;gap:6px;background:#eaf2fb;color:#174b7e;border:1px solid #c9dcf4;border-radius:16px;padding:5px 9px;font-size:11px}
+.service-chip button{border:0;background:transparent;color:#174b7e;font-weight:bold;padding:0;line-height:1}
+.service-empty{padding:12px;color:#687386;font-size:12px;text-align:center}
+.invoice-page{width:210mm;min-height:297mm;box-sizing:border-box;padding:14mm 15mm;background:#fff;overflow:hidden}
+.invoice-services-page{page-break-before:always;break-before:page}
+.invoice-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:10px 0 0}
 
 .table-wrap{overflow:auto}
 
@@ -281,9 +307,9 @@ color:#687386
 .bill-preview{
 background:#fff;
 border:1px solid #cfd6df;
-max-width:850px;
+max-width:900px;
 margin:20px auto;
-padding:30px;
+padding:0;
 box-shadow:0 8px 30px rgba(0,0,0,.08)
 }
 
@@ -330,15 +356,19 @@ border-bottom:1px solid #edf0f4
 
 .total-row strong{font-size:17px}
 .balance-due-row{
-background:#fff8df;
+background:#eef5ff;
+border:1px solid #c9dcf4;
+border-left:4px solid #1769aa;
 padding:10px 12px;
-border-radius:6px;
+border-radius:8px;
 font-weight:bold;
+margin:4px 0;
 }
 
 .balance-due-row strong{
 font-size:18px;
 font-weight:800;
+color:#123b72;
 }
 .qr-section{
 text-align:center;
@@ -384,8 +414,9 @@ padding-top:17px
 .services-last-page{
 break-before:page;
 page-break-before:always;
-min-height:260mm;
-padding-top:10mm;
+min-height:250mm;
+padding:15mm!important;
+box-sizing:border-box;
 }   
 
 .service-list h3{
@@ -474,69 +505,195 @@ margin:0 4px
 
 @page{
 size:A4;
-margin:12mm;
-}
-
-@page{
-size:A4;
-margin:12mm;
+margin:0;
 }
 
 @media print{
-body *{visibility:hidden}
-
-#printArea,
-#printArea *{
-visibility:visible
+html,body{
+margin:0!important;
+padding:0!important;
+background:#fff!important;
 }
 
+body *{visibility:hidden!important}
+#printArea,#printArea *{visibility:visible!important}
+
 #printArea{
-position:absolute;
-left:0;
-top:0;
-width:100%
+display:block!important;
+position:static!important;
+width:210mm!important;
+margin:0 auto!important;
+padding:0!important;
+}
+
+#printArea .bill-preview{
+width:210mm!important;
+max-width:none!important;
+margin:0!important;
+padding:0!important;
+border:0!important;
+box-shadow:none!important;
+}
+
+.invoice-page{
+width:210mm!important;
+height:297mm!important;
+min-height:297mm!important;
+box-sizing:border-box!important;
+padding:15mm 15mm!important;
+margin:0!important;
+overflow:hidden!important;
+}
+
+.invoice-services-page{
+page-break-before:always!important;
+break-before:page!important;
 }
 
 .no-print{display:none!important}
-
-.bill-preview{
-box-shadow:none;
-border:0;
-max-width:none;
-margin:0;
-padding:0
 }
 
-.services-last-page{
-break-before:page;
-page-break-before:always;
-min-height:260mm;
-padding-top:0;
+.auth-overlay{
+position:fixed;
+inset:0;
+z-index:99999;
+background:linear-gradient(135deg,#f4f7fb,#eaf1fb);
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+.auth-card{
+width:100%;
+max-width:430px;
+background:#fff;
+border:1px solid #dce3ec;
+border-radius:16px;
+box-shadow:0 18px 55px rgba(18,59,114,.14);
+padding:28px;
+}
+.auth-brand{text-align:center;margin-bottom:22px}
+.auth-brand h1{margin:0;color:var(--primary);font-size:26px}
+.auth-brand p{margin:7px 0 0;color:var(--muted);font-size:13px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.auth-tab{
+border:1px solid var(--border);
+background:#f7f9fc;
+padding:10px;
+border-radius:8px;
+cursor:pointer;
+font-weight:700;
+}
+.auth-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.auth-form{display:none}
+.auth-form.active{display:block}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:12px;font-weight:700;margin-bottom:6px;color:#334155}
+.auth-field input{
+width:100%;
+padding:11px 12px;
+border:1px solid #ccd5e0;
+border-radius:8px;
+font-size:14px;
+outline:none;
+}
+.auth-field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(23,105,170,.08)}
+.auth-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+.auth-link{margin-top:14px;text-align:center;font-size:12px}
+.auth-link button{border:0;background:none;color:var(--blue);font-weight:700;cursor:pointer}
+.otp-row{display:grid;grid-template-columns:1fr auto;gap:8px}
+.auth-small-btn{
+border:1px solid var(--border);
+background:#f7f9fc;
+border-radius:8px;
+padding:0 12px;
+cursor:pointer;
+font-weight:700;
+}
+.auth-error{display:none;background:#fff1f2;color:#b42318;border:1px solid #fecdca;padding:9px;border-radius:8px;font-size:12px;margin-bottom:12px}
+.auth-success{display:none;background:#ecfdf3;color:#027a48;border:1px solid #abefc6;padding:9px;border-radius:8px;font-size:12px;margin-bottom:12px}
+.auth-otp-hint{display:none;background:#fff8df;border:1px solid #f1d58a;padding:9px;border-radius:8px;font-size:12px;margin-top:8px}
+.logout-btn{margin-top:10px}
+@media(max-width:500px){
+.auth-card{padding:22px}
 }
 
-.services-last-page .service-list{
-margin-top:0;
-}
-
-.services-last-page .service-list-grid{
-columns:3;
-column-gap:25px;
-}
-
-.services-last-page .service-list-grid div{
-break-inside:avoid;
-}
-
-}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
 
+<div id="authOverlay" class="auth-overlay">
+<div class="auth-card">
+<div class="auth-brand">
+<h1>DIGITAL HELP DESK</h1>
+<p>Secure Account Login</p>
+</div>
+
+<div class="auth-tabs">
+<button type="button" id="signInTab" class="auth-tab active" onclick="showAuthForm('signin')">SIGN IN</button>
+<button type="button" id="signUpTab" class="auth-tab" onclick="showAuthForm('signup')">SIGN UP</button>
+</div>
+
+<div id="authError" class="auth-error"></div>
+<div id="authSuccess" class="auth-success"></div>
+
+<form id="signInForm" class="auth-form active" onsubmit="signIn(event)">
+<div class="auth-field">
+<label>Mobile Number</label>
+<input id="loginMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="Enter mobile number" required>
+</div>
+<div class="auth-field">
+<label>Password</label>
+<input id="loginPassword" type="password" placeholder="Enter password" required>
+</div>
+<button class="btn btn-primary" style="width:100%" type="submit">Sign In</button>
+<div class="auth-link">
+Don't have an account?
+<button type="button" onclick="showAuthForm('signup')">Sign Up</button>
+</div>
+</form>
+
+<form id="signUpForm" class="auth-form" onsubmit="createAccount(event)">
+<div class="auth-field">
+<label>Name</label>
+<input id="signupName" type="text" placeholder="Enter your name" required>
+</div>
+<div class="auth-field">
+<label>Mobile Number</label>
+<input id="signupMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="Enter mobile number" required>
+</div>
+<div class="auth-field">
+<label>Create Password</label>
+<input id="signupPassword" type="password" minlength="6" placeholder="Create password (min 6 characters)" required>
+</div>
+<div class="auth-field">
+<label>OTP</label>
+<div class="otp-row">
+<input id="signupOtp" type="text" inputmode="numeric" maxlength="6" placeholder="Enter OTP" required>
+<button type="button" class="auth-small-btn" onclick="sendSignupOtp()">Send OTP</button>
+</div>
+<div id="otpHint" class="auth-otp-hint"></div>
+</div>
+<button class="btn btn-green" style="width:100%" type="submit">Create Account</button>
+<div class="auth-note">
+This GitHub Pages version stores the account locally in this browser. Real SMS OTP delivery requires a backend/SMS provider; the built-in OTP is a local verification flow for this static version.
+</div>
+<div class="auth-link">
+Already have an account?
+<button type="button" onclick="showAuthForm('signin')">Sign In</button>
+</div>
+</form>
+</div>
+</div>
+
+
 <header class="topbar">
 
 <div class="brand">
-<h1>GHAR BAITHKE DIGISEVA</h1>
+<h1>DIGITAL HELP DESK</h1>
 <p>Your Trusted Partner for Digital Services.</p>
 </div>
 
@@ -590,6 +747,7 @@ WhatsApp: 7327933225
 <button class="nav-btn" onclick="showPage('backup',this)">
 💾 Backup
 </button>
+<button class="nav-btn logout-btn" onclick="logout()">🚪 Logout</button>
 
 </aside>
 
@@ -604,7 +762,7 @@ WhatsApp: 7327933225
 <h2 class="page-title">Dashboard</h2>
 
 <p class="page-subtitle">
-Ghar Baithke Digiseva Billing & Work Management
+Digital Help Desk Billing & Work Management
 </p>
 
 <div class="cards">
@@ -752,8 +910,11 @@ Customer se received har kaam ko track karo, pending se done tak.
 
 <div class="field">
 <label>Work / Service *</label>
-<input id="taskService" list="taskServiceList" placeholder="Search service...">
-<datalist id="taskServiceList"></datalist>
+<div class="service-picker" id="taskServicePicker">
+<input id="taskService" class="service-picker-input" placeholder="Search and select services..." autocomplete="off">
+<div id="taskServiceOptions" class="service-picker-menu"></div>
+<div id="taskServiceSelected" class="service-selected"></div>
+</div>
 </div>
 
 <div class="field">
@@ -921,8 +1082,10 @@ Professional invoice generate karo.
 
 <label>Service / Work</label>
 
-<input id="serviceSelect" list="billServiceList" placeholder="Search service...">
-<datalist id="billServiceList"></datalist>
+<div class="service-picker" id="billServicePicker">
+<input id="serviceSelect" class="service-picker-input" placeholder="Search service..." autocomplete="off">
+<div id="billServiceOptions" class="service-picker-menu"></div>
+</div>
 
 </div>
 
@@ -1480,6 +1643,17 @@ Delete All Data
 
 <section id="printArea" style="display:none"></section>
 
+<div id="deleteCustomerModal" class="delete-modal" onclick="if(event.target===this)closeDeleteModal()">
+<div class="delete-modal-box">
+<h3>Confirm Customer Deletion</h3>
+<p id="deleteCustomerMessage">Are you sure you want to delete this customer?</p>
+<div class="delete-modal-actions">
+<button class="btn btn-light" onclick="closeDeleteModal()">Cancel</button>
+<button class="btn btn-danger" onclick="confirmDeleteCustomer()">Yes, Delete Customer</button>
+</div>
+</div>
+</div>
+
 </main>
 </div>
 
@@ -1492,77 +1666,77 @@ Delete All Data
 
 const services=[
 
-"Income Certificate",
-"Caste Certificate",
-"Resident Certificate",
-"EWS Certificate",
-"Legal Heir Certificate",
-"Birth Certificate",
-"Death Certificate",
-"Marriage Certificate",
-"Handicraft Certificate",
-"Character Certificate",
-"Lost Certificate - New Apply",
+"Aadhaar Address Update",
+"Admit Card Download",
+"All Government Scheme Applications",
+"All Private Scholarships",
 "All Types of Affidavit Typing & Online Assistance",
 "All Types of Entrance Exam Forms",
 "All Types of Exam Forms",
-"College Admission Forms",
-"New Scholarship Apply",
-"Scholarship Renewal",
-"PMS Scholarship",
-"NSP Scholarship",
-"Labour Card Scholarship",
-"UG-Merit Scholarship",
-"Banishree Scholarship",
-"All Private Scholarships",
 "APAAR ID / ABC ID Registration",
-"Marksheet Download",
-"Admit Card Download",
-"New Labour Card Apply",
-"Labour Card Renewal",
-"Labour Card Correction",
-"Marriage Assistance Apply",
-"Maternity Assistance Apply",
-"Labour Card Resumption",
-"Old-Age Pension Application",
-"Widow Pension Application",
-"Disability Pension Application",
-"Aadhaar Address Update",
-"New PAN Application",
-"PAN Correction",
-"PAN-Aadhaar Linking",
-"New Voter ID Application",
-"Voter ID Correction",
-"Learner Licence (LL) Application",
-"Driving Licence (DL) Application",
-"DL Renewal",
-"DL Correction",
-"RC Download",
+"Banishree Scholarship",
+"Birth Certificate",
+"Caste Certificate",
 "Challan Payment",
-"New Passport Application",
-"Passport Renewal Application",
-"Passport Correction",
-"Tatkal Train Ticket Booking",
-"Flight Ticket Booking",
-"All Government Scheme Applications",
-"PM-KISAN & CM-KISAN New Apply",
-"PM-KISAN & CM-KISAN e-KYC",
-"Farmer Registration",
-"New Ration Card Application",
-"Ration Card Correction",
+"Character Certificate",
+"College Admission Forms",
+"CV Preparation",
+"Death Certificate",
+"Disability Pension Application",
+"DL Correction",
+"DL Renewal",
+"Driving Licence (DL) Application",
+"Employment Exchange Registration",
+"EWS Certificate",
 "Family Member Addition",
 "Family Member Deletion",
+"Farmer Registration",
+"Flight Ticket Booking",
+"FSSAI Certificate Apply",
+"GST Registration",
+"Handicraft Certificate",
+"Health Card Apply",
+"Income Certificate",
+"ITR Filing",
 "Jomi Khajana Payment",
 "Jomi Pota / Land Record Download",
-"Health Card Apply",
+"Labour Card Correction",
+"Labour Card Renewal",
+"Labour Card Resumption",
+"Labour Card Scholarship",
+"Learner Licence (LL) Application",
+"Legal Heir Certificate",
+"Lost Certificate - New Apply",
+"Marksheet Download",
+"Marriage Assistance Apply",
+"Marriage Certificate",
+"Maternity Assistance Apply",
+"New Labour Card Apply",
 "New LPG Connection Apply",
-"ITR Filing",
-"Udyam Registration",
-"GST Registration",
-"FSSAI Certificate Apply",
-"Employment Exchange Registration",
+"New PAN Application",
+"New Passport Application",
+"New Ration Card Application",
+"New Scholarship Apply",
+"New Voter ID Application",
+"NSP Scholarship",
+"Old-Age Pension Application",
 "Online KYC",
-"CV Preparation"
+"PAN Correction",
+"PAN-Aadhaar Linking",
+"Passport Correction",
+"Passport Renewal Application",
+"PM-KISAN & CM-KISAN e-KYC",
+"PM-KISAN & CM-KISAN New Apply",
+"PMS Scholarship",
+"Ration Card Correction",
+"RC Download",
+"Resident Certificate",
+"Scholarship Renewal",
+"Tatkal Train Ticket Booking",
+"Udyam Registration",
+"UG-Merit Scholarship",
+"Voter ID Correction",
+"Widow Pension Application"
 
 ];
 
@@ -1582,7 +1756,7 @@ tasks:[],
 rates:{},
 
 settings:{
-business:"GHAR BAITHKE DIGISEVA",
+business:"DIGITAL HELP DESK",
 name:"KARTTICK CHANDRA PATRA",
 whatsapp:"7327933225",
 qr:""
@@ -1739,46 +1913,85 @@ String(count).padStart(2,"0");
    SERVICE DROPDOWNS
 ========================================================= */
 
+let taskSelectedServices=[];
+
 function populateServiceDropdowns(){
 
-const billList=
-document.getElementById("billServiceList");
-
-const taskList=
-document.getElementById("taskServiceList");
-
-billList.innerHTML="";
-taskList.innerHTML="";
-
-services.forEach((s,i)=>{
-
-const o1=document.createElement("option");
-o1.value=s;
-o1.label=(i+1)+". "+s;
-billList.appendChild(o1);
-
-const o2=document.createElement("option");
-o2.value=s;
-o2.label=(i+1)+". "+s;
-taskList.appendChild(o2);
-
-});
-
 const billInput=document.getElementById("serviceSelect");
+const billMenu=document.getElementById("billServiceOptions");
+const taskInput=document.getElementById("taskService");
+const taskMenu=document.getElementById("taskServiceOptions");
 
-billInput.addEventListener(
-"input",
-()=>{
+function renderBillOptions(filter=""){
+const q=filter.trim().toLowerCase();
+const matches=services
+.map((s,i)=>({s,i}))
+.filter(x=>!q||x.s.toLowerCase().includes(q));
 
-const s=billInput.value;
+billMenu.innerHTML=matches.length
+?matches.map(x=>`<div class="service-option" data-service="${encodeURIComponent(x.s)}"><span class="service-option-number">${x.i+1}.</span><span class="service-option-name">${escapeHtml(x.s)}</span></div>`).join("")
+:`<div class="service-empty">No service found.</div>`;
 
-if(services.includes(s)){
-document.getElementById("serviceRate").value=
-data.rates[s]||"";
+billMenu.querySelectorAll("[data-service]").forEach(el=>el.addEventListener("mousedown",e=>{
+e.preventDefault();
+const value=decodeURIComponent(el.dataset.service);
+billInput.value=value;
+document.getElementById("serviceRate").value=data.rates[value]||"";
+billMenu.classList.remove("show");
+}));
 }
 
+function renderTaskOptions(filter=""){
+const q=filter.trim().toLowerCase();
+const selected=new Set(taskSelectedServices);
+const matches=services
+.map((s,i)=>({s,i}))
+.filter(x=>!q||x.s.toLowerCase().includes(q));
+
+taskMenu.innerHTML=matches.length
+?matches.map(x=>`<label class="service-option"><input type="checkbox" value="${encodeURIComponent(x.s)}" ${selected.has(x.s)?"checked":""}><span class="service-option-number">${x.i+1}.</span><span class="service-option-name">${escapeHtml(x.s)}</span></label>`).join("")
+:`<div class="service-empty">No service found.</div>`;
+
+taskMenu.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.addEventListener("change",()=>{
+const value=decodeURIComponent(cb.value);
+if(cb.checked){
+if(!taskSelectedServices.includes(value))taskSelectedServices.push(value);
+}else{
+taskSelectedServices=taskSelectedServices.filter(x=>x!==value);
+}
+renderTaskSelected();
+renderTaskOptions(taskInput.value);
+}));
+}
+
+function renderTaskSelected(){
+const box=document.getElementById("taskServiceSelected");
+box.innerHTML=taskSelectedServices.map(s=>`<span class="service-chip">${escapeHtml(s)} <button type="button" onclick="removeTaskService('${encodeURIComponent(s)}')">×</button></span>`).join("");
+}
+
+window.renderTaskSelected=renderTaskSelected;
+window.renderTaskOptions=renderTaskOptions;
+
+window.removeTaskService=function(encoded){
+const value=decodeURIComponent(encoded);
+taskSelectedServices=taskSelectedServices.filter(x=>x!==value);
+renderTaskSelected();
+renderTaskOptions(taskInput.value);
+};
+
+billInput.addEventListener("focus",()=>{renderBillOptions(billInput.value);billMenu.classList.add("show");});
+billInput.addEventListener("input",()=>{renderBillOptions(billInput.value);billMenu.classList.add("show");if(services.includes(billInput.value))document.getElementById("serviceRate").value=data.rates[billInput.value]||"";});
+
+taskInput.addEventListener("focus",()=>{renderTaskOptions(taskInput.value);taskMenu.classList.add("show");});
+taskInput.addEventListener("input",()=>{renderTaskOptions(taskInput.value);taskMenu.classList.add("show");});
+
+document.addEventListener("click",e=>{
+if(!document.getElementById("billServicePicker").contains(e.target))billMenu.classList.remove("show");
+if(!document.getElementById("taskServicePicker").contains(e.target))taskMenu.classList.remove("show");
 });
 
+renderBillOptions();
+renderTaskOptions();
 }
 
 
@@ -1798,8 +2011,8 @@ currentBillItems=[];
 renderBillItems();
 
 document.getElementById("serviceSelect").value="";
-document.getElementById("serviceQty").value=1;
 document.getElementById("serviceRate").value="";
+document.getElementById("serviceQty").value=1;
 
 const date=todayISO();
 
@@ -1843,9 +2056,9 @@ const rate=Number(
 document.getElementById("serviceRate").value
 );
 
-if(!service){
+if(!service || !services.includes(service)){
 
-alert("Please select a service.");
+alert("Please select a valid service from the list.");
 
 return;
 
@@ -2068,21 +2281,24 @@ paymentMode:mode
 
 data.bills.push(bill);
 
-const customerKey=
-(name+"|"+mobile).toLowerCase();
+const existingKey=customerKey(name,mobile);
 
-data.customers=
-data.customers.filter(c=>
-(c.name+"|"+(c.mobile||"")).toLowerCase()!==customerKey
+let existingCustomer=data.customers.find(c=>
+customerKey(c.name,c.mobile)===existingKey
 );
 
+if(existingCustomer){
+existingCustomer.mobile=mobile||existingCustomer.mobile||"";
+existingCustomer.name=existingCustomer.name||name;
+}else{
 data.customers.push({
 name,
 mobile
 });
+}
 
 data.deletedCustomers=
-data.deletedCustomers.filter(k=>k!==customerKey);
+data.deletedCustomers.filter(k=>k!==existingKey);
 
 saveData();
 
@@ -2130,238 +2346,90 @@ function renderBillPreview(bill){
 
 const items=bill.items.map(
 (item,i)=>`
-
 <tr>
-
 <td>${i+1}</td>
-
 <td>${escapeHtml(item.service)}</td>
-
 <td>${item.qty}</td>
-
 <td>${money(item.rate)}</td>
-
 <td>${money(item.amount)}</td>
-
 </tr>
-
 `).join("");
 
-
 const serviceList=services.map(
-(s,i)=>
-`<div>${i+1}. ${escapeHtml(s)}</div>`
+(s,i)=>`<div>${i+1}. ${escapeHtml(s)}</div>`
 ).join("");
 
-
 let qr="";
-
 if(data.settings.qr){
-
-qr=`
-<img class="qr-image"
-src="${data.settings.qr}"
-alt="Payment QR Code">
-`;
-
+qr=`<img class="qr-image" src="${data.settings.qr}" alt="Payment QR Code">`;
 }else{
-
-qr=`
-<div class="qr-placeholder">
-PAYMENT<br>
-QR CODE<br>
-HERE
-</div>
-`;
-
+qr=`<div class="qr-placeholder">PAYMENT<br>QR CODE<br>HERE</div>`;
 }
 
-
 const statusClass=
-bill.status==="PAID"
-?"paid"
-:bill.status==="PARTIAL"
-?"partial"
-:"due";
+bill.status==="PAID"?"paid":bill.status==="PARTIAL"?"partial":"due";
 
-
-document.getElementById("printArea")
-.innerHTML=`
-
-<div class="bill-preview">
-
+const invoicePage1=`
+<div class="invoice-page" id="invoicePage1">
 <div class="bill-header">
-
-<h2>
-${escapeHtml(data.settings.business)}
-</h2>
-
-<p>
-<strong>Your Trusted Partner for Digital Services.</strong>
-</p>
-
-<p>
-<strong>${escapeHtml(data.settings.name)}</strong>
-</p>
-
-<p>
-WhatsApp: ${escapeHtml(data.settings.whatsapp)}
-</p>
-
+<h2>${escapeHtml(data.settings.business)}</h2>
+<p><strong>Your Trusted Partner for Digital Services.</strong></p>
+<p><strong>${escapeHtml(data.settings.name)}</strong></p>
+<p>WhatsApp: ${escapeHtml(data.settings.whatsapp)}</p>
 </div>
-
 
 <div class="bill-info">
-
-<div>
-<strong>Bill No:</strong>
-${bill.billNo}
+<div><strong>Bill No:</strong> ${bill.billNo}</div>
+<div style="text-align:right"><strong>Date:</strong> ${displayDate(bill.date)}</div>
+<div><strong>Customer:</strong> ${escapeHtml(bill.customerName)}</div>
+<div style="text-align:right"><strong>Mobile:</strong> ${escapeHtml(bill.mobile||"-")}</div>
 </div>
-
-<div style="text-align:right">
-<strong>Date:</strong>
-${displayDate(bill.date)}
-</div>
-
-<div>
-<strong>Customer:</strong>
-${escapeHtml(bill.customerName)}
-</div>
-
-<div style="text-align:right">
-<strong>Mobile:</strong>
-${escapeHtml(bill.mobile||"-")}
-</div>
-
-</div>
-
 
 <h3>Work Details</h3>
-
-
 <table>
-
-<thead>
-
-<tr>
-<th>Sl.</th>
-<th>Service / Work</th>
-<th>Qty</th>
-<th>Rate</th>
-<th>Amount</th>
-</tr>
-
-</thead>
-
-<tbody>
-${items}
-</tbody>
-
+<thead><tr><th>Sl.</th><th>Service / Work</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+<tbody>${items}</tbody>
 </table>
 
-
 <div class="total-box">
-
-<div class="total-row">
-<span>Total Amount</span>
-<strong>${money(bill.total)}</strong>
+<div class="total-row"><span>Total Amount</span><strong>${money(bill.total)}</strong></div>
+<div class="total-row"><span>Advance Paid</span><strong>${money(bill.paid)}</strong></div>
+<div class="total-row balance-due-row"><span>Balance Due</span><strong>${money(bill.due)}</strong></div>
+<div class="total-row"><span>Payment Status</span><span class="status ${statusClass}">${bill.status}</span></div>
 </div>
-
-<div class="total-row">
-<span>Advance Paid</span>
-<strong>${money(bill.paid)}</strong>
-</div>
-
-<div class="total-row balance-due-row">
-<span>Balance Due</span>
-<strong>${money(bill.due)}</strong>
-</div>
-
-<div class="total-row">
-<span>Payment Status</span>
-<span class="status ${statusClass}">
-${bill.status}
-</span>
-</div>
-
-</div>
-
 
 <div class="qr-section">
-
 <h4>SCAN TO MAKE PAYMENT</h4>
-
 ${qr}
-
-<p style="font-size:9px;color:#687386;margin:7px 0 0">
-UPI Payment
-</p>
-
-<p style="font-size:10px;color:#455164;margin:10px 0 0;line-height:1.5">
-<strong>You can also pay directly on 7327933225</strong><br>
-via PhonePe, Paytm, Google Pay, Super Money or any other UPI app.
-</p>
-
+<p style="font-size:9px;color:#687386;margin:7px 0 0">UPI Payment</p>
+<p style="font-size:10px;color:#455164;margin:10px 0 0;line-height:1.5"><strong>OR ON THIS NO. 7327933225.</strong></p>
 </div>
-
 
 <div class="footer-note">
-
-Thank you for choosing
-<strong>${escapeHtml(data.settings.business)}</strong>.
-
-<br>
-
-Same Day Service is subject to government portal/server availability.
-
-<br>
-
-WhatsApp:
-<strong>${escapeHtml(data.settings.whatsapp)}</strong>
-
+Thank you for choosing <strong>${escapeHtml(data.settings.business)}</strong>.<br>
+Same Day Service is subject to government portal/server availability.<br>
+WhatsApp: <strong>${escapeHtml(data.settings.whatsapp)}</strong>
 </div>
+</div>`;
 
-
-<div class="services-last-page">
-
+const invoicePage2=`
+<div class="invoice-page invoice-services-page" id="invoiceServicesPage">
 <div class="service-list">
-
 <h3>OUR SERVICES</h3>
-
-<div class="service-list-grid">
-
-${serviceList}
-
+<div class="service-list-grid">${serviceList}</div>
 </div>
+</div>`;
 
+document.getElementById("printArea").innerHTML=`
+<div class="bill-preview">
+${invoicePage1}
+${invoicePage2}
+<div class="invoice-actions no-print">
+<button class="btn btn-primary" onclick="printBill('${encodeURIComponent(bill.customerName)}','${bill.billNo}')">🖨 Print / Save PDF</button>
+<button class="btn btn-green" onclick="shareBillWhatsApp('${bill.id}')">📲 WhatsApp</button>
+<button class="btn btn-light" onclick="document.getElementById('printArea').style.display='none'">Close</button>
 </div>
-
-</div>
-
-
-<div class="actions no-print">
-
-<button class="btn btn-primary"
-onclick="printBill('${encodeURIComponent(bill.customerName)}','${bill.billNo}')">
-🖨 Print / Save PDF
-</button>
-
-<button class="btn btn-green"
-onclick="shareBillWhatsApp('${bill.id}')">
-📲 WhatsApp
-</button>
-
-<button class="btn btn-light"
-onclick="document.getElementById('printArea').style.display='none'">
-Close
-</button>
-
-</div>
-
-</div>
-
-`;
-
+</div>`;
 }
 
 
@@ -2369,12 +2437,7 @@ Close
    WHATSAPP BILL
 ========================================================= */
 
-function shareBillWhatsApp(id){
-
-const bill=data.bills.find(b=>b.id===id);
-
-if(!bill)return;
-
+function buildWhatsAppMessage(bill){
 let message=
 `${data.settings.business}
 ${data.settings.name}
@@ -2387,14 +2450,9 @@ Customer: ${bill.customerName}
 Work Details:
 `;
 
-bill.items.forEach(
-(item,i)=>{
-
-message+=
-`${i+1}. ${item.service} | Qty: ${item.qty} | ${money(item.amount)}\n`;
-
+bill.items.forEach((item,i)=>{
+message+=`${i+1}. ${item.service} | Qty: ${item.qty} | ${money(item.amount)}\n`;
 });
-
 
 message+=`
 Total Amount: ${money(bill.total)}
@@ -2404,18 +2462,77 @@ Status: ${bill.status}
 
 Your Trusted Partner for Digital Services.
 `;
+return message;
+}
 
+async function createBillPDFBlob(bill){
+if(!window.html2canvas||!window.jspdf)return null;
+const page1=document.getElementById("invoicePage1");
+const page2=document.getElementById("invoiceServicesPage");
+if(!page1||!page2)return null;
 
-const mobile=
-(bill.mobile||"").replace(/\D/g,"");
+const {jsPDF}=window.jspdf;
+const pdf=new jsPDF({orientation:"p",unit:"mm",format:"a4",compress:true});
+const pages=[page1,page2];
 
-const url=
-mobile.length>=10
+for(let i=0;i<pages.length;i++){
+const canvas=await html2canvas(pages[i],{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false});
+const img=canvas.toDataURL("image/jpeg",0.92);
+if(i>0)pdf.addPage();
+pdf.addImage(img,"JPEG",0,0,210,297,undefined,"FAST");
+}
+
+return pdf.output("blob");
+}
+
+function downloadBlob(blob,filename){
+const url=URL.createObjectURL(blob);
+const a=document.createElement("a");
+a.href=url;
+a.download=filename;
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+function safePdfName(bill){
+const name=String(bill.customerName||"Customer").trim().replace(/[\\/:*?"<>|]+/g,"-");
+return `${name} - Bill ${bill.billNo}.pdf`;
+}
+
+async function shareBillWhatsApp(id){
+const bill=data.bills.find(b=>b.id===id);
+if(!bill)return;
+
+const message=buildWhatsAppMessage(bill);
+const filename=safePdfName(bill);
+
+try{
+const blob=await createBillPDFBlob(bill);
+if(!blob)throw new Error("PDF library unavailable");
+const file=new File([blob],filename,{type:"application/pdf"});
+
+if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+await navigator.share({files:[file],text:message,title:`Invoice ${bill.billNo}`});
+return;
+}
+
+downloadBlob(blob,filename);
+const mobile=(bill.mobile||"").replace(/\D/g,"");
+const url=mobile.length>=10
 ?`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`
 :`https://wa.me/?text=${encodeURIComponent(message)}`;
-
 window.open(url,"_blank");
-
+alert("Invoice PDF has been downloaded. WhatsApp has been opened with the message. Please attach the downloaded PDF in WhatsApp.");
+}catch(err){
+const mobile=(bill.mobile||"").replace(/\D/g,"");
+const url=mobile.length>=10
+?`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`
+:`https://wa.me/?text=${encodeURIComponent(message)}`;
+window.open(url,"_blank");
+alert("PDF could not be generated automatically. WhatsApp message has been opened.");
+}
 }
 
 
@@ -2427,7 +2544,10 @@ function clearTaskForm(){
 
 document.getElementById("taskCustomer").value="";
 document.getElementById("taskMobile").value="";
+taskSelectedServices=[];
 document.getElementById("taskService").value="";
+if(typeof renderTaskSelected==="function")renderTaskSelected();
+if(typeof renderTaskOptions==="function")renderTaskOptions("");
 document.getElementById("taskDate").value=todayISO();
 document.getElementById("taskPriority").value="Normal";
 document.getElementById("taskStatus").value="PENDING";
@@ -2446,8 +2566,8 @@ const mobile=
 document.getElementById("taskMobile")
 .value.trim();
 
-const service=
-document.getElementById("taskService").value;
+const selectedServices=[...taskSelectedServices];
+const service=selectedServices.join(", ");
 
 const date=
 document.getElementById("taskDate").value;
@@ -2470,9 +2590,9 @@ return;
 
 }
 
-if(!service){
+if(!selectedServices.length){
 
-alert("Please select work/service.");
+alert("Please select at least one work/service.");
 
 return;
 
@@ -2488,6 +2608,7 @@ customer,
 mobile,
 
 service,
+services:selectedServices,
 
 receivedDate:date||todayISO(),
 
@@ -2516,6 +2637,11 @@ alert("Work added successfully.");
 
 }
 
+
+function taskServiceText(task){
+if(Array.isArray(task.services)&&task.services.length)return task.services.join(", ");
+return String(task.service||"");
+}
 
 function taskStatusClass(status){
 
@@ -2556,7 +2682,7 @@ const text=
 (
 t.customer+" "+
 t.mobile+" "+
-t.service+" "+
+taskServiceText(t)+" "+
 t.notes
 ).toLowerCase();
 
@@ -2614,7 +2740,7 @@ ${escapeHtml(t.mobile||"-")}
 </td>
 
 <td>
-${escapeHtml(t.service)}
+${escapeHtml(taskServiceText(t))}
 </td>
 
 <td>
@@ -3090,160 +3216,162 @@ behavior:"smooth"
    CUSTOMERS
 ========================================================= */
 
-function customerKey(name,mobile){
-
-return(
-String(name||"")+"|"+
-String(mobile||"")
-).toLowerCase();
-
+function normalizeCustomerName(name){
+return String(name||"").trim().replace(/\s+/g," ").toLowerCase();
 }
 
+function customerKey(name,mobile){
+return normalizeCustomerName(name);
+}
 
 function deleteCustomer(name,mobile){
 
 const key=customerKey(name,mobile);
 
-if(!confirm(
-"Delete this customer from the customer list?\n\nExisting bills and work records will NOT be deleted."
-))return;
+pendingDeleteCustomer={name,mobile,key};
 
-if(!data.deletedCustomers.includes(key))
-data.deletedCustomers.push(key);
+const billCount=data.bills.filter(b=>
+customerKey(b.customerName,b.mobile)===key
+).length;
 
-data.customers=
-data.customers.filter(c=>
+const taskCount=data.tasks.filter(t=>
+customerKey(t.customer,t.mobile)===key
+).length;
+
+const msg=
+`Delete ${name}?
+
+This will permanently remove this customer's bills, payment records, due amounts and work/task records from this browser.
+
+Bills: ${billCount}
+Work records: ${taskCount}
+
+This action cannot be undone.`;
+
+document.getElementById("deleteCustomerMessage").textContent=msg;
+document.getElementById("deleteCustomerModal").classList.add("show");
+
+}
+
+
+let pendingDeleteCustomer=null;
+
+function closeDeleteModal(){
+
+pendingDeleteCustomer=null;
+document.getElementById("deleteCustomerModal").classList.remove("show");
+
+}
+
+
+function confirmDeleteCustomer(){
+
+if(!pendingDeleteCustomer)return;
+
+const {key}=pendingDeleteCustomer;
+
+data.bills=data.bills.filter(b=>
+customerKey(b.customerName,b.mobile)!==key
+);
+
+data.tasks=data.tasks.filter(t=>
+customerKey(t.customer,t.mobile)!==key
+);
+
+data.customers=data.customers.filter(c=>
 customerKey(c.name,c.mobile)!==key
 );
 
-saveData();
+data.deletedCustomers=data.deletedCustomers.filter(k=>k!==key);
 
-renderCustomers();
+saveData();
+closeDeleteModal();
+updateAll();
+
+alert("Customer and all related billing/payment records have been deleted successfully.");
 
 }
 
 
 function renderCustomers(){
 
-const q=
-(
-document.getElementById("customerSearch")
-?.value||""
-).toLowerCase();
+const q=(
+document.getElementById("customerSearch")?.value||""
+).toLowerCase().trim();
 
 const map={};
 
 data.bills.forEach(b=>{
-
 const key=customerKey(b.customerName,b.mobile);
-
 if(data.deletedCustomers.includes(key))return;
 
 if(!map[key]){
-
 map[key]={
 name:b.customerName,
-mobile:b.mobile,
+mobile:b.mobile||"",
 bills:0,
 total:0,
 paid:0,
 due:0
 };
-
 }
 
 map[key].bills++;
-map[key].total+=b.total;
-map[key].paid+=b.paid;
-map[key].due+=b.due;
+map[key].total+=Number(b.total)||0;
+map[key].paid+=Number(b.paid)||0;
+map[key].due+=Number(b.due)||0;
 
+if(!map[key].mobile && b.mobile)map[key].mobile=b.mobile;
 });
 
-
 data.customers.forEach(c=>{
-
 const key=customerKey(c.name,c.mobile);
-
 if(data.deletedCustomers.includes(key))return;
 
 if(!map[key]){
-
 map[key]={
 name:c.name,
-mobile:c.mobile,
+mobile:c.mobile||"",
 bills:0,
 total:0,
 paid:0,
 due:0
 };
-
 }
-
 });
 
-
-const customers=
-Object.values(map).filter(c=>
+const customers=Object.values(map)
+.filter(c=>
 !q||
 c.name.toLowerCase().includes(q)||
 (c.mobile||"").includes(q)
-);
+)
+.sort((a,b)=>a.name.localeCompare(b.name));
 
-
-const tbody=
-document.getElementById("customerTable");
-
+const tbody=document.getElementById("customerTable");
 
 if(!customers.length){
-
-tbody.innerHTML=
-`<tr>
-<td colspan="7" class="empty">
-No customers found.
-</td>
-</tr>`;
-
+tbody.innerHTML=`<tr><td colspan="7" class="empty">No customers found.</td></tr>`;
 return;
-
 }
 
-
-tbody.innerHTML=
-customers.map(
-c=>`
-
+tbody.innerHTML=customers.map(c=>`
 <tr>
-
-<td>
-<strong>${escapeHtml(c.name)}</strong>
-</td>
-
-<td>
-${escapeHtml(c.mobile||"-")}
-</td>
-
+<td><strong>${escapeHtml(c.name)}</strong></td>
+<td>${escapeHtml(c.mobile||"-")}</td>
 <td>${c.bills}</td>
-
 <td>${money(c.total)}</td>
-
 <td>${money(c.paid)}</td>
-
 <td>${money(c.due)}</td>
-
 <td>
-<button
-class="btn btn-danger"
+<button class="btn btn-danger"
 onclick="deleteCustomer(decodeURIComponent('${encodeURIComponent(c.name)}'),decodeURIComponent('${encodeURIComponent(c.mobile||"")}'))">
 Delete
 </button>
 </td>
-
 </tr>
-
 `).join("");
-
 }
-
 
 /* =========================================================
    DUES
@@ -3609,7 +3737,7 @@ document.createElement("a");
 a.href=url;
 
 a.download=
-"GharBaithkeDigiseva_Backup_"+
+"DigitalHelpDesk_Backup_"+
 todayISO()+
 ".json";
 
@@ -3657,7 +3785,7 @@ if(
 data=restored;
 
 data.settings=data.settings||{
-business:"GHAR BAITHKE DIGISEVA",
+business:"DIGITAL HELP DESK",
 name:"KARTTICK CHANDRA PATRA",
 whatsapp:"7327933225",
 qr:""
@@ -3724,6 +3852,174 @@ updateReports();
 }
 
 
+
+/* =========================================================
+   LOCAL ACCOUNT AUTHENTICATION
+   Real SMS OTP requires a backend/SMS provider.
+========================================================= */
+
+const AUTH_KEY="digitalHelpDesk_accounts_v1";
+const SESSION_KEY="digitalHelpDesk_session_v1";
+let pendingSignupOtp="";
+let pendingSignupMobile="";
+
+function getAccounts(){
+try{
+return JSON.parse(localStorage.getItem(AUTH_KEY)||"[]");
+}catch(e){return [];}
+}
+
+function saveAccounts(accounts){
+localStorage.setItem(AUTH_KEY,JSON.stringify(accounts));
+}
+
+function normalizeMobile(mobile){
+return String(mobile||"").replace(/\D/g,"").slice(-10);
+}
+
+async function hashPassword(password){
+const dataBytes=new TextEncoder().encode(password);
+const hash=await crypto.subtle.digest("SHA-256",dataBytes);
+return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function authMessage(type,text){
+const el=document.getElementById(type==="error"?"authError":"authSuccess");
+const other=document.getElementById(type==="error"?"authSuccess":"authError");
+other.style.display="none";
+el.textContent=text;
+el.style.display="block";
+}
+
+function clearAuthMessages(){
+document.getElementById("authError").style.display="none";
+document.getElementById("authSuccess").style.display="none";
+}
+
+function showAuthForm(which){
+clearAuthMessages();
+document.getElementById("signInForm").classList.toggle("active",which==="signin");
+document.getElementById("signUpForm").classList.toggle("active",which==="signup");
+document.getElementById("signInTab").classList.toggle("active",which==="signin");
+document.getElementById("signUpTab").classList.toggle("active",which==="signup");
+}
+
+function sendSignupOtp(){
+const mobile=normalizeMobile(document.getElementById("signupMobile").value);
+if(mobile.length!==10){
+authMessage("error","Please enter a valid 10-digit mobile number.");
+return;
+}
+pendingSignupMobile=mobile;
+pendingSignupOtp=String(Math.floor(100000+Math.random()*900000));
+const hint=document.getElementById("otpHint");
+hint.textContent="Static-site verification OTP for this browser: "+pendingSignupOtp;
+hint.style.display="block";
+authMessage("success","OTP generated. Enter the verification code above.");
+}
+
+async function createAccount(event){
+event.preventDefault();
+clearAuthMessages();
+
+const name=document.getElementById("signupName").value.trim();
+const mobile=normalizeMobile(document.getElementById("signupMobile").value);
+const password=document.getElementById("signupPassword").value;
+const otp=document.getElementById("signupOtp").value.trim();
+
+if(!name||mobile.length!==10||password.length<6){
+authMessage("error","Please enter a valid name, 10-digit mobile number and password of at least 6 characters.");
+return;
+}
+
+if(!pendingSignupOtp||pendingSignupMobile!==mobile){
+authMessage("error","Please click Send OTP for this mobile number first.");
+return;
+}
+
+if(otp!==pendingSignupOtp){
+authMessage("error","Invalid OTP.");
+return;
+}
+
+const accounts=getAccounts();
+if(accounts.some(a=>a.mobile===mobile)){
+authMessage("error","An account already exists for this mobile number. Please Sign In.");
+return;
+}
+
+const passwordHash=await hashPassword(password);
+accounts.push({
+id:Date.now().toString(),
+name,
+mobile,
+passwordHash,
+createdAt:new Date().toISOString()
+});
+saveAccounts(accounts);
+
+sessionStorage.setItem(SESSION_KEY,JSON.stringify({
+id:accounts[accounts.length-1].id,
+name,
+mobile
+}));
+
+pendingSignupOtp="";
+pendingSignupMobile="";
+document.getElementById("otpHint").style.display="none";
+document.getElementById("authOverlay").style.display="none";
+authMessage("success","Account created successfully.");
+}
+
+async function signIn(event){
+event.preventDefault();
+clearAuthMessages();
+
+const mobile=normalizeMobile(document.getElementById("loginMobile").value);
+const password=document.getElementById("loginPassword").value;
+
+const accounts=getAccounts();
+const account=accounts.find(a=>a.mobile===mobile);
+
+if(!account){
+authMessage("error","No account found for this mobile number. Please Sign Up.");
+return;
+}
+
+const passwordHash=await hashPassword(password);
+if(passwordHash!==account.passwordHash){
+authMessage("error","Incorrect mobile number or password.");
+return;
+}
+
+sessionStorage.setItem(SESSION_KEY,JSON.stringify({
+id:account.id,
+name:account.name,
+mobile:account.mobile
+}));
+
+document.getElementById("authOverlay").style.display="none";
+updateAll();
+}
+
+function logout(){
+if(!confirm("Are you sure you want to logout?"))return;
+sessionStorage.removeItem(SESSION_KEY);
+document.getElementById("authOverlay").style.display="flex";
+showAuthForm("signin");
+document.getElementById("loginPassword").value="";
+}
+
+function initAuth(){
+const session=sessionStorage.getItem(SESSION_KEY);
+if(session){
+document.getElementById("authOverlay").style.display="none";
+}else{
+document.getElementById("authOverlay").style.display="flex";
+}
+}
+
+
 /* =========================================================
    INITIALIZATION
 ========================================================= */
@@ -3739,6 +4035,8 @@ updateAll();
 renderServices();
 
 loadSettings();
+
+initAuth();
 
 </script>
 
