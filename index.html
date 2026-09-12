@@ -332,17 +332,24 @@ font-size:27px
  .invoice-logo-wrap{
 width:100%;
 display:flex;
+flex-direction:column;
 justify-content:center;
 align-items:center;
-margin:0 0 2mm;
+text-align:center;
+margin:0 0 1mm;
 }
 .invoice-logo{
 display:block;
-width:28mm;
-height:28mm;
-max-width:28mm;
-max-height:28mm;
+width:12mm;
+height:12mm;
+max-width:12mm;
+max-height:12mm;
 object-fit:contain;
+margin:0 auto 1mm;
+}
+.invoice-brand-text{
+width:100%;
+text-align:center;
 }
 .invoice-brand-name{
 margin:0;
@@ -469,17 +476,25 @@ font-size:14px
 }
 
 .service-list-grid{
-columns:3;
-column-gap:25px
+display:grid;
+grid-template-columns:repeat(3,minmax(0,1fr));
+column-gap:30px;
+row-gap:3px;
+align-items:start;
 }
 
 .service-list-grid div{
-font-size:8.5px;
-line-height:1.62;
-word-spacing:2.2px;
+font-size:9.5px;
+line-height:1.45;
+word-spacing:1.5px;
+letter-spacing:0;
+white-space:normal;
+overflow-wrap:normal;
+word-break:normal;
 break-inside:avoid;
-padding-right:2px;
-margin-bottom:1px;
+padding-right:3px;
+margin:0;
+min-width:0;
 }
 
 .footer-note{
@@ -546,7 +561,7 @@ margin:0 4px
 
 .bill-info{grid-template-columns:1fr}
 
-.service-list-grid{columns:1}
+.service-list-grid{grid-template-columns:1fr}
 }
 
 @page{
@@ -611,7 +626,7 @@ page-break-before:always!important;
 break-before:page!important;
 }
 
-.invoice-logo{width:28mm!important;height:28mm!important;max-width:28mm!important;max-height:28mm!important;}
+.invoice-logo{width:12mm!important;height:12mm!important;max-width:12mm!important;max-height:12mm!important;}
 .invoice-brand-name{font-size:27px!important;}
 .no-print{display:none!important}
 }
@@ -2400,21 +2415,41 @@ behavior:"smooth"
    BILL PREVIEW
 ========================================================= */
 
-function printBill(customerName,billNo){
+async function printBill(customerName,billNo,id){
 
 customerName=decodeURIComponent(customerName);
 
-const oldTitle=document.title;
+const bill=data.bills.find(b=>String(b.id)===String(id)) ||
+           data.bills.find(b=>String(b.billNo)===String(billNo));
 
-document.title=
-String(customerName||"Customer")
-.trim()+" - Bill "+billNo;
+if(!bill){
+alert("Unable to find this bill.");
+return;
+}
 
-window.print();
+try{
+const blob=await createBillPDFBlob(bill);
+if(!blob)throw new Error("PDF library unavailable");
 
-setTimeout(()=>{
-document.title=oldTitle;
-},1000);
+const filename=safePdfName(bill);
+const url=URL.createObjectURL(blob);
+
+/* Open the exact same PDF generated for WhatsApp sharing.
+   The browser PDF viewer provides the normal Print / Save controls. */
+const win=window.open("about:blank","_blank");
+
+if(win){
+win.document.title=filename;
+win.location.href=url;
+setTimeout(()=>URL.revokeObjectURL(url),60000);
+}else{
+downloadBlob(blob,filename);
+alert("PDF opened as a download because the browser blocked the new tab.");
+}
+}catch(err){
+console.error(err);
+alert("Could not create the PDF. Please try again.");
+}
 
 }
 
@@ -2507,7 +2542,7 @@ document.getElementById("printArea").innerHTML=`
 ${invoicePage1}
 ${invoicePage2}
 <div class="invoice-actions no-print">
-<button class="btn btn-primary" onclick="printBill('${encodeURIComponent(bill.customerName)}','${bill.billNo}')">🖨 Print / Save PDF</button>
+<button class="btn btn-primary" onclick="printBill('${encodeURIComponent(bill.customerName)}','${bill.billNo}','${bill.id}')">🖨 Print / Save PDF</button>
 <button class="btn btn-green" onclick="shareBillWhatsApp('${bill.id}')">📲 WhatsApp</button>
 <button class="btn btn-danger" onclick="deleteBill('${bill.id}')">Delete Bill</button>
 <button class="btn btn-light" onclick="document.getElementById('printArea').style.display='none'">Close</button>
