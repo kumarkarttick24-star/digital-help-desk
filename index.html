@@ -2,464 +2,483 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Ghar Baithke Digiseva | Billing System</title>
 
 <style>
 :root{
-  --primary:#123b72;
-  --primary2:#1769aa;
-  --green:#159447;
-  --light:#f4f7fb;
-  --border:#dce3ec;
-  --text:#172033;
-  --muted:#687386;
-  --danger:#d9363e;
-  --warning:#e59b00;
-  --white:#fff;
-  --shadow:0 8px 25px rgba(18,59,114,.08);
+--primary:#123b72;
+--blue:#1769aa;
+--green:#159447;
+--orange:#e59b00;
+--red:#d9363e;
+--bg:#f4f7fb;
+--white:#fff;
+--text:#172033;
+--muted:#687386;
+--border:#dce3ec;
+--shadow:0 7px 25px rgba(18,59,114,.08)
 }
 
 *{box-sizing:border-box}
 
 body{
-  margin:0;
-  font-family:Arial,Helvetica,sans-serif;
-  background:var(--light);
-  color:var(--text);
+margin:0;
+font-family:Arial,Helvetica,sans-serif;
+background:var(--bg);
+color:var(--text)
 }
 
-button,input,select{
-  font:inherit;
-}
+button,input,select,textarea{font:inherit}
 
-button{
-  cursor:pointer;
-}
+button{cursor:pointer}
 
 .topbar{
-  background:linear-gradient(135deg,#123b72,#1769aa);
-  color:white;
-  padding:16px 24px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  position:sticky;
-  top:0;
-  z-index:20;
-  box-shadow:0 4px 18px rgba(0,0,0,.12);
+background:linear-gradient(135deg,#123b72,#1769aa);
+color:white;
+padding:15px 24px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+position:sticky;
+top:0;
+z-index:100;
+box-shadow:0 4px 18px rgba(0,0,0,.14)
 }
 
-.brand h1{
-  margin:0;
-  font-size:23px;
-  letter-spacing:.4px;
-}
-
-.brand p{
-  margin:4px 0 0;
-  font-size:13px;
-  opacity:.9;
-}
+.brand h1{margin:0;font-size:22px}
+.brand p{margin:4px 0 0;font-size:12px;opacity:.9}
 
 .whatsapp{
-  background:#20b957;
-  padding:9px 15px;
-  border-radius:8px;
-  font-weight:bold;
+background:#20b957;
+padding:9px 15px;
+border-radius:8px;
+font-weight:bold;
+font-size:13px
 }
 
-.layout{
-  display:flex;
-  min-height:calc(100vh - 74px);
-}
+.layout{display:flex;min-height:calc(100vh - 70px)}
 
 .sidebar{
-  width:230px;
-  background:#fff;
-  border-right:1px solid var(--border);
-  padding:18px 12px;
-  position:sticky;
-  top:74px;
-  height:calc(100vh - 74px);
+width:235px;
+background:#fff;
+border-right:1px solid var(--border);
+padding:16px 12px;
+position:sticky;
+top:70px;
+height:calc(100vh - 70px)
 }
 
 .nav-btn{
-  width:100%;
-  border:0;
-  background:transparent;
-  padding:12px 13px;
-  text-align:left;
-  border-radius:8px;
-  margin-bottom:5px;
-  color:#3c4759;
-  font-weight:600;
+width:100%;
+border:0;
+background:transparent;
+padding:11px 13px;
+text-align:left;
+border-radius:8px;
+margin-bottom:5px;
+color:#3c4759;
+font-weight:600
 }
 
 .nav-btn:hover,.nav-btn.active{
-  background:#eaf2fb;
-  color:var(--primary);
+background:#eaf2fb;
+color:var(--primary)
 }
 
 .main{
-  flex:1;
-  padding:25px;
-  max-width:1500px;
+flex:1;
+padding:25px;
+max-width:1550px;
+margin:auto;
+width:100%
 }
 
-.page{
-  display:none;
-}
+.page{display:none}
+.page.active{display:block}
 
-.page.active{
-  display:block;
-}
-
-.page-title{
-  margin:0 0 5px;
-  font-size:25px;
-}
-
-.page-subtitle{
-  color:var(--muted);
-  margin:0 0 22px;
-}
+.page-title{margin:0 0 5px;font-size:25px}
+.page-subtitle{color:var(--muted);margin:0 0 22px}
 
 .cards{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:15px;
-  margin-bottom:22px;
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:15px;
+margin-bottom:20px
 }
 
 .card{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:18px;
-  box-shadow:var(--shadow);
+background:#fff;
+border:1px solid var(--border);
+border-radius:12px;
+padding:18px;
+box-shadow:var(--shadow)
 }
 
-.card .label{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:bold;
-  text-transform:uppercase;
+.label{
+color:var(--muted);
+font-size:11px;
+font-weight:bold;
+text-transform:uppercase
 }
 
-.card .value{
-  margin-top:9px;
-  font-size:25px;
-  font-weight:800;
-  color:var(--primary);
+.value{
+margin-top:9px;
+font-size:25px;
+font-weight:800;
+color:var(--primary)
 }
 
 .panel{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:12px;
-  padding:20px;
-  box-shadow:var(--shadow);
-  margin-bottom:20px;
+background:#fff;
+border:1px solid var(--border);
+border-radius:12px;
+padding:20px;
+box-shadow:var(--shadow);
+margin-bottom:20px
 }
 
-.panel h3{
-  margin:0 0 16px;
-}
+.panel h3{margin:0 0 16px}
 
 .grid2{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:16px
 }
 
 .grid3{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:16px;
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:16px
 }
 
 .field{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
+display:flex;
+flex-direction:column;
+gap:6px
 }
 
 .field label{
-  font-size:13px;
-  font-weight:bold;
-  color:#455164;
+font-size:13px;
+font-weight:bold;
+color:#455164
 }
 
 .field input,
-.field select{
-  border:1px solid #cfd7e2;
-  border-radius:7px;
-  padding:10px 11px;
-  background:white;
-  outline:none;
+.field select,
+.field textarea{
+border:1px solid #cfd7e2;
+border-radius:7px;
+padding:10px 11px;
+background:#fff;
+outline:none
+}
+
+.field textarea{
+min-height:80px;
+resize:vertical
 }
 
 .field input:focus,
-.field select:focus{
-  border-color:var(--primary2);
-  box-shadow:0 0 0 3px rgba(23,105,170,.1);
-}
-
-.btn{
-  border:0;
-  border-radius:7px;
-  padding:10px 16px;
-  font-weight:bold;
-}
-
-.btn-primary{
-  background:var(--primary);
-  color:#fff;
-}
-
-.btn-green{
-  background:var(--green);
-  color:#fff;
-}
-
-.btn-light{
-  background:#eef3f8;
-  color:#23415f;
-}
-
-.btn-danger{
-  background:#fbe8e9;
-  color:#b9232b;
-}
-
-.btn-warning{
-  background:#fff3d5;
-  color:#8c5a00;
+.field select:focus,
+.field textarea:focus{
+border-color:#1769aa;
+box-shadow:0 0 0 3px rgba(23,105,170,.1)
 }
 
 .actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:9px;
-  margin-top:18px;
+display:flex;
+flex-wrap:wrap;
+gap:9px;
+margin-top:18px
 }
 
-.table-wrap{
-  overflow:auto;
+.btn{
+border:0;
+border-radius:7px;
+padding:10px 16px;
+font-weight:bold
 }
+
+.btn-primary{background:var(--primary);color:white}
+.btn-green{background:var(--green);color:white}
+.btn-light{background:#eef3f8;color:#23415f}
+.btn-danger{background:#fde9ea;color:#b9232b}
+.btn-warning{background:#fff4d8;color:#8c5a00}
+.btn-blue{background:#eaf2fb;color:#145c91}
+
+.table-wrap{overflow:auto}
 
 table{
-  width:100%;
-  border-collapse:collapse;
+width:100%;
+border-collapse:collapse
 }
 
 th,td{
-  padding:11px 10px;
-  border-bottom:1px solid #e7ebf0;
-  text-align:left;
-  font-size:13px;
+padding:11px 10px;
+border-bottom:1px solid #e7ebf0;
+text-align:left;
+font-size:13px
 }
 
 th{
-  background:#f5f8fc;
-  color:#405069;
-  font-size:12px;
-  text-transform:uppercase;
-}
-
-.text-right{
-  text-align:right;
-}
-
-.total-box{
-  max-width:430px;
-  margin-left:auto;
-  margin-top:18px;
-}
-
-.total-row{
-  display:flex;
-  justify-content:space-between;
-  padding:9px 0;
-  border-bottom:1px solid #edf0f4;
-}
-
-.total-row strong{
-  font-size:18px;
-}
-
-.status{
-  display:inline-block;
-  padding:5px 9px;
-  border-radius:20px;
-  font-size:11px;
-  font-weight:bold;
-}
-
-.status-paid{
-  background:#e2f7ea;
-  color:#13813d;
-}
-
-.status-partial{
-  background:#fff1cf;
-  color:#996200;
-}
-
-.status-due{
-  background:#fde7e8;
-  color:#b6242d;
-}
-
-.bill-preview{
-  background:#fff;
-  border:1px solid #cfd6df;
-  max-width:850px;
-  margin:20px auto;
-  padding:30px;
-  box-shadow:0 8px 30px rgba(0,0,0,.08);
-}
-
-.bill-header{
-  text-align:center;
-  border-bottom:2px solid var(--primary);
-  padding-bottom:15px;
-  margin-bottom:18px;
-}
-
-.bill-header h2{
-  margin:0;
-  color:var(--primary);
-  font-size:27px;
-}
-
-.bill-header p{
-  margin:5px 0;
-  color:#596579;
-}
-
-.bill-info{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:5px 30px;
-  margin-bottom:20px;
-  font-size:13px;
-}
-
-.bill-total{
-  max-width:350px;
-  margin-left:auto;
-}
-
-.service-list{
-  margin-top:20px;
-  border-top:1px solid #ddd;
-  padding-top:18px;
-}
-
-.service-list h3{
-  color:var(--primary);
-  margin:0 0 10px;
-  font-size:15px;
-}
-
-.service-list-grid{
-  columns:3;
-  column-gap:25px;
-}
-
-.service-list-grid div{
-  font-size:10px;
-  line-height:1.55;
-  break-inside:avoid;
-}
-
-.footer-note{
-  margin-top:25px;
-  text-align:center;
-  color:#667085;
-  font-size:10px;
-}
-
-.big-action{
-  padding:14px 22px;
-  font-size:15px;
-}
-
-.search{
-  max-width:400px;
-  width:100%;
-  padding:11px;
-  border:1px solid #ccd5e0;
-  border-radius:7px;
+background:#f5f8fc;
+color:#405069;
+font-size:11px;
+text-transform:uppercase
 }
 
 .empty{
-  text-align:center;
-  padding:40px;
-  color:var(--muted);
+text-align:center;
+padding:40px;
+color:var(--muted)
+}
+
+.search{
+max-width:450px;
+width:100%;
+padding:11px;
+border:1px solid #ccd5e0;
+border-radius:7px;
+outline:none
 }
 
 .notice{
-  padding:12px 15px;
-  border-radius:8px;
-  background:#edf6ff;
-  color:#245477;
-  margin-bottom:15px;
-  font-size:13px;
+padding:12px 15px;
+border-radius:8px;
+background:#edf6ff;
+color:#245477;
+margin-bottom:15px;
+font-size:13px
 }
 
-.lifetime{
-  grid-column:span 1;
+.status{
+display:inline-block;
+padding:5px 9px;
+border-radius:20px;
+font-size:10px;
+font-weight:bold
 }
 
-@media(max-width:1100px){
-  .cards{grid-template-columns:repeat(3,1fr)}
-  .sidebar{width:200px}
+.pending{background:#fff4d8;color:#946000}
+.progress{background:#eaf2fb;color:#145c91}
+.done{background:#e7f7ed;color:#13813d}
+.paid{background:#e7f7ed;color:#13813d}
+.partial{background:#fff4d8;color:#996200}
+.due{background:#fde9ea;color:#b6242d}
+
+.priority-high{
+color:#b6242d;
+font-weight:bold
+}
+
+.priority-normal{
+color:#687386
+}
+
+/* BILL */
+
+.bill-preview{
+background:#fff;
+border:1px solid #cfd6df;
+max-width:850px;
+margin:20px auto;
+padding:30px;
+box-shadow:0 8px 30px rgba(0,0,0,.08)
+}
+
+.bill-header{
+text-align:center;
+border-bottom:2px solid var(--primary);
+padding-bottom:15px;
+margin-bottom:18px
+}
+
+.bill-header h2{
+margin:0;
+color:var(--primary);
+font-size:27px
+}
+
+.bill-header p{
+margin:5px 0;
+color:#596579
+}
+
+.bill-info{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:7px 30px;
+margin-bottom:20px;
+font-size:13px
+}
+
+.total-box{
+max-width:360px;
+margin-left:auto;
+margin-top:18px
+}
+
+.total-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:15px;
+padding:9px 0;
+border-bottom:1px solid #edf0f4
+}
+
+.total-row strong{font-size:17px}
+
+.qr-section{
+text-align:center;
+margin:25px auto 10px;
+padding:15px;
+border-top:1px dashed #cbd3dd;
+border-bottom:1px dashed #cbd3dd
+}
+
+.qr-section h4{
+margin:0 0 8px;
+color:var(--primary);
+font-size:13px
+}
+
+.qr-image{
+width:110px;
+height:110px;
+object-fit:contain;
+display:block;
+margin:auto
+}
+
+.qr-placeholder{
+width:110px;
+height:110px;
+margin:auto;
+border:1px dashed #aeb8c6;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+font-size:9px;
+color:#7b8491;
+background:#fafbfd
+}
+
+.service-list{
+margin-top:22px;
+border-top:1px solid #ddd;
+padding-top:17px
+}
+
+.service-list h3{
+color:var(--primary);
+margin:0 0 10px;
+font-size:14px
+}
+
+.service-list-grid{
+columns:3;
+column-gap:25px
+}
+
+.service-list-grid div{
+font-size:8.5px;
+line-height:1.55;
+break-inside:avoid
+}
+
+.footer-note{
+margin-top:22px;
+text-align:center;
+color:#667085;
+font-size:10px;
+line-height:1.5
+}
+
+.qr-upload{
+display:flex;
+align-items:center;
+gap:15px;
+flex-wrap:wrap
+}
+
+.qr-preview-small{
+width:110px;
+height:110px;
+border:1px solid var(--border);
+border-radius:8px;
+object-fit:contain;
+background:#fff
+}
+
+@media(max-width:1150px){
+.cards{grid-template-columns:repeat(3,1fr)}
+.sidebar{width:210px}
 }
 
 @media(max-width:800px){
-  .layout{display:block}
-  .sidebar{
-    width:100%;
-    height:auto;
-    position:static;
-    display:flex;
-    overflow:auto;
-    padding:8px;
-    border-right:0;
-    border-bottom:1px solid var(--border);
-  }
-  .nav-btn{
-    min-width:max-content;
-    margin:0 4px;
-  }
-  .main{padding:15px}
-  .cards{grid-template-columns:repeat(2,1fr)}
-  .grid2,.grid3{grid-template-columns:1fr}
-  .topbar{padding:12px 15px}
-  .whatsapp{display:none}
-  .service-list-grid{columns:2}
+.layout{display:block}
+
+.sidebar{
+width:100%;
+height:auto;
+position:static;
+display:flex;
+overflow:auto;
+padding:8px;
+border-right:0;
+border-bottom:1px solid var(--border)
+}
+
+.nav-btn{
+min-width:max-content;
+margin:0 4px
+}
+
+.main{padding:15px}
+
+.cards{grid-template-columns:repeat(2,1fr)}
+
+.grid2,.grid3{grid-template-columns:1fr}
+
+.whatsapp{display:none}
 }
 
 @media(max-width:500px){
-  .cards{grid-template-columns:1fr}
-  .bill-preview{padding:16px}
-  .service-list-grid{columns:1}
-  .bill-info{grid-template-columns:1fr}
+.cards{grid-template-columns:1fr}
+
+.bill-preview{padding:16px}
+
+.bill-info{grid-template-columns:1fr}
+
+.service-list-grid{columns:1}
 }
 
 @media print{
-  body *{visibility:hidden}
-  #printArea,#printArea *{visibility:visible}
-  #printArea{
-    position:absolute;
-    left:0;
-    top:0;
-    width:100%;
-  }
-  .no-print{display:none!important}
+body *{visibility:hidden}
+
+#printArea,
+#printArea *{
+visibility:visible
+}
+
+#printArea{
+position:absolute;
+left:0;
+top:0;
+width:100%
+}
+
+.no-print{display:none!important}
+
+.bill-preview{
+box-shadow:none;
+border:0;
+max-width:none;
+margin:0
+}
 }
 </style>
 </head>
@@ -467,390 +486,947 @@ th{
 <body>
 
 <header class="topbar">
-  <div class="brand">
-    <h1>GHAR BAITHKE DIGISEVA</h1>
-    <p>Billing & Digital Service Management</p>
-  </div>
-  <div class="whatsapp">WhatsApp: 7327933225</div>
+
+<div class="brand">
+<h1>GHAR BAITHKE DIGISEVA</h1>
+<p>Digital Services • Billing • Work Management</p>
+</div>
+
+<div class="whatsapp">
+WhatsApp: 7327933225
+</div>
+
 </header>
+
 
 <div class="layout">
 
 <aside class="sidebar">
-  <button class="nav-btn active" onclick="showPage('dashboard',this)">🏠 Dashboard</button>
-  <button class="nav-btn" onclick="showPage('newbill',this)">🧾 New Bill</button>
-  <button class="nav-btn" onclick="showPage('customers',this)">👥 Customers</button>
-  <button class="nav-btn" onclick="showPage('history',this)">📚 Bill History</button>
-  <button class="nav-btn" onclick="showPage('dues',this)">💰 Due Payments</button>
-  <button class="nav-btn" onclick="showPage('services',this)">🛠️ Services & Rates</button>
-  <button class="nav-btn" onclick="showPage('reports',this)">📊 Reports</button>
-  <button class="nav-btn" onclick="showPage('backup',this)">💾 Backup / Restore</button>
+
+<button class="nav-btn active" onclick="showPage('dashboard',this)">
+🏠 Dashboard
+</button>
+
+<button class="nav-btn" onclick="showPage('tasks',this)">
+📋 Work / Tasks
+</button>
+
+<button class="nav-btn" onclick="showPage('newbill',this)">
+🧾 New Bill
+</button>
+
+<button class="nav-btn" onclick="showPage('customers',this)">
+👥 Customers
+</button>
+
+<button class="nav-btn" onclick="showPage('history',this)">
+📚 Bill History
+</button>
+
+<button class="nav-btn" onclick="showPage('dues',this)">
+💰 Due Payments
+</button>
+
+<button class="nav-btn" onclick="showPage('services',this)">
+🛠️ Services & Rates
+</button>
+
+<button class="nav-btn" onclick="showPage('reports',this)">
+📊 Reports
+</button>
+
+<button class="nav-btn" onclick="showPage('settings',this)">
+⚙️ Settings
+</button>
+
+<button class="nav-btn" onclick="showPage('backup',this)">
+💾 Backup
+</button>
+
 </aside>
+
 
 <main class="main">
 
+
 <!-- DASHBOARD -->
+
 <section id="dashboard" class="page active">
-  <h2 class="page-title">Dashboard</h2>
-  <p class="page-subtitle">Welcome to your billing management system.</p>
 
-  <div class="cards">
-    <div class="card">
-      <div class="label">Today's Collection</div>
-      <div class="value" id="todayCollection">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">Weekly Collection</div>
-      <div class="value" id="weekCollection">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">Monthly Collection</div>
-      <div class="value" id="monthCollection">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">Yearly Collection</div>
-      <div class="value" id="yearCollection">₹0</div>
-    </div>
-    <div class="card lifetime">
-      <div class="label">Total Collection Till Date</div>
-      <div class="value" id="totalCollection">₹0</div>
-    </div>
-  </div>
+<h2 class="page-title">Dashboard</h2>
 
-  <div class="cards">
-    <div class="card">
-      <div class="label">Today's Bills</div>
-      <div class="value" id="todayBills">0</div>
-    </div>
-    <div class="card">
-      <div class="label">Total Customers</div>
-      <div class="value" id="customerCount">0</div>
-    </div>
-    <div class="card">
-      <div class="label">Total Due</div>
-      <div class="value" id="totalDue">₹0</div>
-    </div>
-  </div>
+<p class="page-subtitle">
+Ghar Baithke Digiseva Billing & Work Management
+</p>
 
-  <div class="panel">
-    <h3>Quick Actions</h3>
-    <div class="actions">
-      <button class="btn btn-primary big-action" onclick="goNewBill()">＋ Create New Bill</button>
-      <button class="btn btn-light big-action" onclick="showPageById('history')">View Bill History</button>
-      <button class="btn btn-light big-action" onclick="showPageById('dues')">View Due Payments</button>
-    </div>
-  </div>
+<div class="cards">
+
+<div class="card">
+<div class="label">Today's Collection</div>
+<div class="value" id="todayCollection">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">Weekly Collection</div>
+<div class="value" id="weekCollection">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">Monthly Collection</div>
+<div class="value" id="monthCollection">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">Yearly Collection</div>
+<div class="value" id="yearCollection">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">Total Collection</div>
+<div class="value" id="totalCollection">₹0</div>
+</div>
+
+</div>
+
+
+<div class="cards">
+
+<div class="card">
+<div class="label">Pending Works</div>
+<div class="value" id="pendingCount">0</div>
+</div>
+
+<div class="card">
+<div class="label">In Progress</div>
+<div class="value" id="progressCount">0</div>
+</div>
+
+<div class="card">
+<div class="label">Done Today</div>
+<div class="value" id="doneTodayCount">0</div>
+</div>
+
+<div class="card">
+<div class="label">Urgent Works</div>
+<div class="value" id="urgentCount">0</div>
+</div>
+
+<div class="card">
+<div class="label">Total Due</div>
+<div class="value" id="totalDue">₹0</div>
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h3>Quick Actions</h3>
+
+<div class="actions">
+
+<button class="btn btn-primary"
+onclick="showPageById('tasks')">
+＋ Add New Work
+</button>
+
+<button class="btn btn-green"
+onclick="goNewBill()">
+＋ Create New Bill
+</button>
+
+<button class="btn btn-light"
+onclick="showPageById('dues')">
+💰 Check Due Payments
+</button>
+
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h3>Recent Pending Works</h3>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>Customer</th>
+<th>Work</th>
+<th>Received</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="dashboardTasks"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- TASKS -->
+
+<section id="tasks" class="page">
+
+<h2 class="page-title">Work / Task Management</h2>
+
+<p class="page-subtitle">
+Customer se received har kaam ko track karo, pending se done tak.
+</p>
+
+
+<div class="panel">
+
+<h3>Add New Work</h3>
+
+<div class="grid2">
+
+<div class="field">
+<label>Customer Name *</label>
+<input id="taskCustomer" placeholder="Customer name">
+</div>
+
+<div class="field">
+<label>Mobile Number</label>
+<input id="taskMobile" placeholder="Mobile number">
+</div>
+
+<div class="field">
+<label>Work / Service *</label>
+<select id="taskService"></select>
+</div>
+
+<div class="field">
+<label>Date Received</label>
+<input id="taskDate" type="date">
+</div>
+
+<div class="field">
+<label>Priority</label>
+<select id="taskPriority">
+<option value="Normal">Normal</option>
+<option value="High">High / Urgent</option>
+</select>
+</div>
+
+<div class="field">
+<label>Status</label>
+<select id="taskStatus">
+<option value="PENDING">Pending</option>
+<option value="IN PROGRESS">In Progress</option>
+</select>
+</div>
+
+</div>
+
+
+<div class="field" style="margin-top:16px">
+<label>Required Documents / Notes</label>
+<textarea id="taskNotes"
+placeholder="Documents received, missing documents, OTP etc."></textarea>
+</div>
+
+
+<div class="actions">
+
+<button class="btn btn-primary"
+onclick="addTask()">
+＋ Add Work
+</button>
+
+<button class="btn btn-light"
+onclick="clearTaskForm()">
+Clear
+</button>
+
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h3>Work List</h3>
+
+<div class="actions" style="margin-top:0">
+
+<input class="search"
+id="taskSearch"
+placeholder="Search customer, mobile or work..."
+oninput="renderTasks()">
+
+<select id="taskFilter"
+onchange="renderTasks()"
+style="padding:10px;border:1px solid #ccd5e0;border-radius:7px">
+
+<option value="ALL">All Status</option>
+<option value="PENDING">Pending</option>
+<option value="IN PROGRESS">In Progress</option>
+<option value="DONE">Done</option>
+
+</select>
+
+<select id="taskPriorityFilter"
+onchange="renderTasks()"
+style="padding:10px;border:1px solid #ccd5e0;border-radius:7px">
+
+<option value="ALL">All Priority</option>
+<option value="High">High / Urgent</option>
+<option value="Normal">Normal</option>
+
+</select>
+
+</div>
+
+
+<div class="table-wrap" style="margin-top:18px">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Customer</th>
+<th>Work</th>
+<th>Received</th>
+<th>Completed</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Notes</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody id="taskTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- NEW BILL -->
+
 <section id="newbill" class="page">
-  <h2 class="page-title">Create New Bill</h2>
-  <p class="page-subtitle">Create a professional bill for your customer.</p>
 
-  <div class="panel">
-    <h3>Customer Details</h3>
+<h2 class="page-title">Create New Bill</h2>
 
-    <div class="grid2">
-      <div class="field">
-        <label>Customer Name *</label>
-        <input id="customerName" type="text" placeholder="Enter customer name">
-      </div>
+<p class="page-subtitle">
+Professional invoice generate karo.
+</p>
 
-      <div class="field">
-        <label>Mobile Number</label>
-        <input id="customerMobile" type="text" placeholder="Enter mobile number">
-      </div>
 
-      <div class="field">
-        <label>Date</label>
-        <input id="billDate" type="date">
-      </div>
+<div class="panel">
 
-      <div class="field">
-        <label>Bill No.</label>
-        <input id="billNo" type="text" readonly>
-      </div>
-    </div>
-  </div>
+<h3>Customer Details</h3>
 
-  <div class="panel">
-    <h3>Work Details</h3>
+<div class="grid2">
 
-    <div class="grid3">
-      <div class="field">
-        <label>Service / Work</label>
-        <select id="serviceSelect"></select>
-      </div>
+<div class="field">
+<label>Customer Name *</label>
+<input id="customerName" placeholder="Enter customer name">
+</div>
 
-      <div class="field">
-        <label>Quantity</label>
-        <input id="serviceQty" type="number" min="1" value="1">
-      </div>
+<div class="field">
+<label>Mobile Number</label>
+<input id="customerMobile" placeholder="Enter mobile number">
+</div>
 
-      <div class="field">
-        <label>Rate (₹)</label>
-        <input id="serviceRate" type="number" min="0" placeholder="Enter amount">
-      </div>
-    </div>
+<div class="field">
+<label>Date</label>
+<input id="billDate" type="date">
+</div>
 
-    <div class="actions">
-      <button class="btn btn-primary" onclick="addServiceToBill()">＋ Add Service</button>
-    </div>
+<div class="field">
+<label>Bill No.</label>
+<input id="billNo" readonly>
+</div>
 
-    <div class="table-wrap" style="margin-top:20px">
-      <table>
-        <thead>
-          <tr>
-            <th>Sl.</th>
-            <th>Service / Work</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Amount</th>
-            <th class="no-print">Action</th>
-          </tr>
-        </thead>
-        <tbody id="billItems"></tbody>
-      </table>
-    </div>
+</div>
 
-    <div class="total-box">
-      <div class="total-row">
-        <span>Total Amount</span>
-        <strong id="billTotal">₹0</strong>
-      </div>
-      <div class="total-row">
-        <span>Advance Paid</span>
-        <input id="advancePaid" type="number" min="0" value="0"
-               style="width:130px;padding:7px;border:1px solid #ccd5e0;border-radius:6px"
-               oninput="updateBillTotals()">
-      </div>
-      <div class="total-row">
-        <span>Balance Due</span>
-        <strong id="billDue">₹0</strong>
-      </div>
+</div>
 
-      <div class="grid2" style="margin-top:14px">
-        <div class="field">
-          <label>Payment Mode</label>
-          <select id="paymentMode">
-            <option>UPI</option>
-            <option>Cash</option>
-            <option>Other</option>
-          </select>
-        </div>
 
-        <div class="field">
-          <label>Payment Status</label>
-          <input id="paymentStatus" value="DUE" readonly>
-        </div>
-      </div>
-    </div>
+<div class="panel">
 
-    <div class="actions">
-      <button class="btn btn-green big-action" onclick="saveBill()">✓ Save & Generate Bill</button>
-      <button class="btn btn-light" onclick="clearBillForm()">Clear</button>
-    </div>
-  </div>
+<h3>Work Details</h3>
+
+<div class="grid3">
+
+<div class="field">
+
+<label>Service / Work</label>
+
+<select id="serviceSelect"></select>
+
+</div>
+
+
+<div class="field">
+
+<label>Quantity</label>
+
+<input id="serviceQty"
+type="number"
+min="1"
+value="1">
+
+</div>
+
+
+<div class="field">
+
+<label>Rate (₹)</label>
+
+<input id="serviceRate"
+type="number"
+min="0"
+placeholder="Enter amount">
+
+</div>
+
+</div>
+
+
+<div class="actions">
+
+<button class="btn btn-primary"
+onclick="addServiceToBill()">
+＋ Add Service
+</button>
+
+</div>
+
+
+<div class="table-wrap" style="margin-top:20px">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Sl.</th>
+<th>Service / Work</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Amount</th>
+<th class="no-print">Action</th>
+</tr>
+
+</thead>
+
+<tbody id="billItems"></tbody>
+
+</table>
+
+</div>
+
+
+<div class="total-box">
+
+<div class="total-row">
+<span>Total Amount</span>
+<strong id="billTotal">₹0</strong>
+</div>
+
+<div class="total-row">
+<span>Advance Paid</span>
+<input id="advancePaid"
+type="number"
+min="0"
+value="0"
+style="width:130px;padding:7px;border:1px solid #ccd5e0;border-radius:6px"
+oninput="updateBillTotals()">
+</div>
+
+<div class="total-row">
+<span>Balance Due</span>
+<strong id="billDue">₹0</strong>
+</div>
+
+
+<div class="grid2" style="margin-top:14px">
+
+<div class="field">
+
+<label>Payment Mode</label>
+
+<select id="paymentMode">
+<option>UPI</option>
+<option>Cash</option>
+<option>Other</option>
+</select>
+
+</div>
+
+<div class="field">
+
+<label>Payment Status</label>
+
+<input id="paymentStatus"
+value="DUE"
+readonly>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="actions">
+
+<button class="btn btn-green"
+onclick="saveBill()">
+✓ Save & Generate Bill
+</button>
+
+<button class="btn btn-light"
+onclick="clearBillForm()">
+Clear
+</button>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- CUSTOMERS -->
+
 <section id="customers" class="page">
-  <h2 class="page-title">Customers</h2>
-  <p class="page-subtitle">Search and view customer billing history.</p>
 
-  <div class="panel">
-    <input class="search" id="customerSearch" placeholder="Search customer name or mobile..." oninput="renderCustomers()">
+<h2 class="page-title">Customers</h2>
 
-    <div class="table-wrap" style="margin-top:18px">
-      <table>
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Mobile</th>
-            <th>Total Bills</th>
-            <th>Total Work</th>
-            <th>Paid</th>
-            <th>Due</th>
-          </tr>
-        </thead>
-        <tbody id="customerTable"></tbody>
-      </table>
-    </div>
-  </div>
+<p class="page-subtitle">
+Customer-wise billing summary.
+</p>
+
+<div class="panel">
+
+<input class="search"
+id="customerSearch"
+placeholder="Search customer or mobile..."
+oninput="renderCustomers()">
+
+<div class="table-wrap" style="margin-top:18px">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Customer</th>
+<th>Mobile</th>
+<th>Total Bills</th>
+<th>Total Work Value</th>
+<th>Paid</th>
+<th>Due</th>
+</tr>
+
+</thead>
+
+<tbody id="customerTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- HISTORY -->
+
 <section id="history" class="page">
-  <h2 class="page-title">Bill History</h2>
-  <p class="page-subtitle">All generated bills.</p>
 
-  <div class="panel">
-    <div class="actions" style="margin-top:0">
-      <input class="search" id="historySearch" placeholder="Search bill/customer..." oninput="renderHistory()">
+<h2 class="page-title">Bill History</h2>
 
-      <select id="historyFilter" onchange="renderHistory()" style="padding:10px;border:1px solid #ccd5e0;border-radius:7px">
-        <option value="ALL">All</option>
-        <option value="PAID">Paid</option>
-        <option value="PARTIAL">Partial</option>
-        <option value="DUE">Due</option>
-      </select>
-    </div>
+<p class="page-subtitle">
+All generated invoices.
+</p>
 
-    <div class="table-wrap" style="margin-top:18px">
-      <table>
-        <thead>
-          <tr>
-            <th>Bill No.</th>
-            <th>Date</th>
-            <th>Customer</th>
-            <th>Total</th>
-            <th>Paid</th>
-            <th>Due</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="historyTable"></tbody>
-      </table>
-    </div>
-  </div>
+
+<div class="panel">
+
+<div class="actions" style="margin-top:0">
+
+<input class="search"
+id="historySearch"
+placeholder="Search bill/customer..."
+oninput="renderHistory()">
+
+<select id="historyFilter"
+onchange="renderHistory()"
+style="padding:10px;border:1px solid #ccd5e0;border-radius:7px">
+
+<option value="ALL">All</option>
+<option value="PAID">Paid</option>
+<option value="PARTIAL">Partial</option>
+<option value="DUE">Due</option>
+
+</select>
+
+</div>
+
+
+<div class="table-wrap" style="margin-top:18px">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Bill No.</th>
+<th>Date</th>
+<th>Customer</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Due</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody id="historyTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- DUES -->
+
 <section id="dues" class="page">
-  <h2 class="page-title">Due Payments</h2>
-  <p class="page-subtitle">Track all outstanding customer payments.</p>
 
-  <div class="card" style="max-width:350px;margin-bottom:20px">
-    <div class="label">Total Outstanding</div>
-    <div class="value" id="duePageTotal">₹0</div>
-  </div>
+<h2 class="page-title">Due Payments</h2>
 
-  <div class="panel">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Bill No.</th>
-            <th>Customer</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Paid</th>
-            <th>Due</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="dueTable"></tbody>
-      </table>
-    </div>
-  </div>
+<p class="page-subtitle">
+Outstanding customer payments.
+</p>
+
+
+<div class="card" style="max-width:350px;margin-bottom:20px">
+
+<div class="label">Total Outstanding</div>
+
+<div class="value" id="duePageTotal">₹0</div>
+
+</div>
+
+
+<div class="panel">
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Bill No.</th>
+<th>Customer</th>
+<th>Date</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Due</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody id="dueTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- SERVICES -->
+
 <section id="services" class="page">
-  <h2 class="page-title">Services & Rates</h2>
-  <p class="page-subtitle">Manage your service list and default rates.</p>
 
-  <div class="panel">
-    <div class="notice">
-      You can change the default rate anytime. The rate used in an already-created bill will not change.
-    </div>
+<h2 class="page-title">Services & Rates</h2>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Sl.</th>
-            <th>Service</th>
-            <th>Default Rate (₹)</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="serviceTable"></tbody>
-      </table>
-    </div>
-  </div>
+<p class="page-subtitle">
+Your complete service list.
+</p>
+
+
+<div class="panel">
+
+<div class="notice">
+Default rate yahan save kar sakte ho. Bill banate waqt rate change bhi kar sakte ho.
+</div>
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+<th>Sl.</th>
+<th>Service</th>
+<th>Default Rate ₹</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody id="serviceTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- REPORTS -->
+
 <section id="reports" class="page">
-  <h2 class="page-title">Reports</h2>
-  <p class="page-subtitle">Collection and billing overview.</p>
 
-  <div class="cards">
-    <div class="card">
-      <div class="label">Today</div>
-      <div class="value" id="reportToday">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">This Week</div>
-      <div class="value" id="reportWeek">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">This Month</div>
-      <div class="value" id="reportMonth">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">This Year</div>
-      <div class="value" id="reportYear">₹0</div>
-    </div>
-    <div class="card">
-      <div class="label">Lifetime</div>
-      <div class="value" id="reportLifetime">₹0</div>
-    </div>
-  </div>
+<h2 class="page-title">Reports</h2>
 
-  <div class="panel">
-    <h3>Billing Summary</h3>
-    <div class="grid3">
-      <div class="card">
-        <div class="label">Total Bills</div>
-        <div class="value" id="reportBills">0</div>
-      </div>
-      <div class="card">
-        <div class="label">Total Bill Value</div>
-        <div class="value" id="reportBillValue">₹0</div>
-      </div>
-      <div class="card">
-        <div class="label">Total Outstanding</div>
-        <div class="value" id="reportDue">₹0</div>
-      </div>
-    </div>
-  </div>
+<p class="page-subtitle">
+Collection and billing overview.
+</p>
+
+
+<div class="cards">
+
+<div class="card">
+<div class="label">Today</div>
+<div class="value" id="reportToday">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">This Week</div>
+<div class="value" id="reportWeek">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">This Month</div>
+<div class="value" id="reportMonth">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">This Year</div>
+<div class="value" id="reportYear">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">Lifetime</div>
+<div class="value" id="reportLifetime">₹0</div>
+</div>
+
+</div>
+
+
+<div class="grid3">
+
+<div class="card">
+<div class="label">Total Bills</div>
+<div class="value" id="reportBills">0</div>
+</div>
+
+<div class="card">
+<div class="label">Total Bill Value</div>
+<div class="value" id="reportBillValue">₹0</div>
+</div>
+
+<div class="card">
+<div class="label">Total Outstanding</div>
+<div class="value" id="reportDue">₹0</div>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- SETTINGS -->
+
+<section id="settings" class="page">
+
+<h2 class="page-title">Settings</h2>
+
+<p class="page-subtitle">
+Business information and payment QR code.
+</p>
+
+
+<div class="panel">
+
+<h3>Business Details</h3>
+
+<div class="grid2">
+
+<div class="field">
+<label>Service Name</label>
+<input id="settingBusiness"
+value="GHAR BAITHKE DIGISEVA">
+</div>
+
+<div class="field">
+<label>Your Name</label>
+<input id="settingName"
+value="Kumar">
+</div>
+
+<div class="field">
+<label>WhatsApp Number</label>
+<input id="settingWhatsapp"
+value="7327933225">
+</div>
+
+</div>
+
+
+<div class="actions">
+
+<button class="btn btn-primary"
+onclick="saveSettings()">
+Save Business Details
+</button>
+
+</div>
+
+</div>
+
+
+<div class="panel">
+
+<h3>Payment QR Code</h3>
+
+<div class="notice">
+Apna UPI payment QR code yahan upload karo. Ye invoice ke niche automatically show hoga.
+</div>
+
+
+<div class="qr-upload">
+
+<img id="settingsQrPreview"
+class="qr-preview-small"
+style="display:none">
+
+
+<div>
+
+<input
+type="file"
+id="qrUpload"
+accept="image/png,image/jpeg,image/webp"
+onchange="uploadQR(event)">
+
+<p style="font-size:12px;color:#687386">
+Recommended: clear square QR image.
+</p>
+
+</div>
+
+</div>
+
+
+<div class="actions">
+
+<button class="btn btn-danger"
+onclick="removeQR()">
+Remove QR Code
+</button>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- BACKUP -->
+
 <section id="backup" class="page">
-  <h2 class="page-title">Backup / Restore</h2>
-  <p class="page-subtitle">Keep a safe copy of your billing data.</p>
 
-  <div class="panel">
-    <div class="notice">
-      Your billing data is currently stored in this browser. Regularly download a backup file.
-    </div>
+<h2 class="page-title">Backup / Restore</h2>
 
-    <div class="actions">
-      <button class="btn btn-primary" onclick="downloadBackup()">⬇ Download Backup</button>
+<p class="page-subtitle">
+Billing aur work data ka backup rakho.
+</p>
 
-      <label class="btn btn-light">
-        ⬆ Restore Backup
-        <input type="file" accept=".json" onchange="restoreBackup(event)" style="display:none">
-      </label>
 
-      <button class="btn btn-danger" onclick="deleteAllData()">Delete All Data</button>
-    </div>
-  </div>
+<div class="panel">
+
+<div class="notice">
+
+Data is browser ke local storage mein save hota hai.
+Regular backup download karna strongly recommended hai.
+
+</div>
+
+
+<div class="actions">
+
+<button class="btn btn-primary"
+onclick="downloadBackup()">
+⬇ Download Backup
+</button>
+
+
+<label class="btn btn-light">
+
+⬆ Restore Backup
+
+<input
+type="file"
+accept=".json"
+onchange="restoreBackup(event)"
+style="display:none">
+
+</label>
+
+
+<button class="btn btn-danger"
+onclick="deleteAllData()">
+Delete All Data
+</button>
+
+</div>
+
+</div>
+
 </section>
 
 
 <!-- PRINT AREA -->
+
 <section id="printArea" style="display:none"></section>
 
 </main>
@@ -859,9 +1435,12 @@ th{
 
 <script>
 
-const STORAGE_KEY = "gharBaithkeDigisevaData_v1";
+/* =========================================================
+   SERVICES - EXACTLY 71
+========================================================= */
 
-const services = [
+const services=[
+
 "Income Certificate",
 "Caste Certificate",
 "Resident Certificate",
@@ -933,357 +1512,783 @@ const services = [
 "Employment Exchange Registration",
 "Online KYC",
 "CV Preparation"
+
 ];
 
-let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
-  bills:[],
-  rates:{}
+
+/* =========================================================
+   DATA
+========================================================= */
+
+const KEY="gharBaithkeDigiseva_FINAL_v1";
+
+let data=JSON.parse(
+localStorage.getItem(KEY)
+)||{
+
+bills:[],
+tasks:[],
+rates:{},
+
+settings:{
+business:"GHAR BAITHKE DIGISEVA",
+name:"Kumar",
+whatsapp:"7327933225",
+qr:""
+}
+
 };
 
-services.forEach((s,i)=>{
-  if(data.rates[s] === undefined) data.rates[s] = "";
+
+services.forEach(s=>{
+
+if(data.rates[s]===undefined)
+data.rates[s]="";
+
 });
 
-let currentBillItems = [];
 
 function saveData(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+localStorage.setItem(
+KEY,
+JSON.stringify(data)
+);
+
 }
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function money(n){
-  return "₹" + Number(n || 0).toLocaleString("en-IN");
+
+return "₹"+Number(n||0)
+.toLocaleString("en-IN");
+
 }
+
 
 function todayISO(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const day = String(d.getDate()).padStart(2,"0");
-  return `${y}-${m}-${day}`;
+
+const d=new Date();
+
+return d.getFullYear()+"-"+
+String(d.getMonth()+1).padStart(2,"0")+"-"+
+String(d.getDate()).padStart(2,"0");
+
 }
+
 
 function displayDate(date){
-  if(!date) return "";
-  const p = date.split("-");
-  return `${p[2]}-${p[1]}-${p[0]}`;
+
+if(!date)return"-";
+
+const p=date.split("-");
+
+return p[2]+"-"+p[1]+"-"+p[0];
+
 }
 
-function generateBillNo(date){
-  const p = date.split("-");
-  const prefix = `${p[2]}${p[1]}${p[0]}`;
 
-  const count = data.bills.filter(b=>b.date===date).length + 1;
+function escapeHtml(str){
 
-  return prefix + String(count).padStart(2,"0");
+return String(str||"")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
 }
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
 
 function showPage(id,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
 
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-  if(btn) btn.classList.add("active");
+document.querySelectorAll(".page")
+.forEach(p=>p.classList.remove("active"));
 
-  if(id==="dashboard") updateDashboard();
-  if(id==="customers") renderCustomers();
-  if(id==="history") renderHistory();
-  if(id==="dues") renderDues();
-  if(id==="services") renderServices();
-  if(id==="reports") updateReports();
+document.getElementById(id)
+.classList.add("active");
+
+document.querySelectorAll(".nav-btn")
+.forEach(b=>b.classList.remove("active"));
+
+if(btn)btn.classList.add("active");
+
+if(id==="dashboard")updateDashboard();
+if(id==="tasks")renderTasks();
+if(id==="customers")renderCustomers();
+if(id==="history")renderHistory();
+if(id==="dues")renderDues();
+if(id==="services")renderServices();
+if(id==="reports")updateReports();
+if(id==="settings")loadSettings();
+
 }
+
 
 function showPageById(id){
-  const btn=[...document.querySelectorAll(".nav-btn")]
-    .find(b=>b.getAttribute("onclick")?.includes(`'${id}'`));
-  showPage(id,btn);
+
+const btn=[...document.querySelectorAll(".nav-btn")]
+.find(b=>
+(b.getAttribute("onclick")||"")
+.includes("'"+id+"'")
+);
+
+showPage(id,btn);
+
 }
+
 
 function goNewBill(){
-  showPageById("newbill");
-  clearBillForm();
+
+showPageById("newbill");
+
+clearBillForm();
+
 }
 
-function populateServices(){
-  const select=document.getElementById("serviceSelect");
-  select.innerHTML='<option value="">Select Service</option>';
 
-  services.forEach((s,i)=>{
-    const option=document.createElement("option");
-    option.value=s;
-    option.textContent=`${i+1}. ${s}`;
-    select.appendChild(option);
-  });
+/* =========================================================
+   BILL NUMBER
+   DDMMYYYY + DAILY SERIAL
+========================================================= */
 
-  select.addEventListener("change",()=>{
-    const service=select.value;
-    document.getElementById("serviceRate").value=data.rates[service] || "";
-  });
+function generateBillNo(date){
+
+const p=date.split("-");
+
+const prefix=p[2]+p[1]+p[0];
+
+const count=data.bills.filter(
+b=>b.date===date
+).length+1;
+
+return prefix+
+String(count).padStart(2,"0");
+
 }
 
-function setToday(){
-  document.getElementById("billDate").value=todayISO();
-  document.getElementById("billNo").value=generateBillNo(todayISO());
+
+/* =========================================================
+   SERVICE DROPDOWNS
+========================================================= */
+
+function populateServiceDropdowns(){
+
+const billSelect=
+document.getElementById("serviceSelect");
+
+const taskSelect=
+document.getElementById("taskService");
+
+billSelect.innerHTML=
+'<option value="">Select Service</option>';
+
+taskSelect.innerHTML=
+'<option value="">Select Service</option>';
+
+services.forEach((s,i)=>{
+
+const o1=document.createElement("option");
+
+o1.value=s;
+o1.textContent=(i+1)+". "+s;
+
+billSelect.appendChild(o1);
+
+
+const o2=document.createElement("option");
+
+o2.value=s;
+o2.textContent=(i+1)+". "+s;
+
+taskSelect.appendChild(o2);
+
+});
+
+
+billSelect.addEventListener(
+"change",
+()=>{
+
+const s=billSelect.value;
+
+document.getElementById("serviceRate").value=
+data.rates[s]||"";
+
+});
+
 }
+
+
+/* =========================================================
+   BILL FORM
+========================================================= */
 
 function clearBillForm(){
-  document.getElementById("customerName").value="";
-  document.getElementById("customerMobile").value="";
-  document.getElementById("advancePaid").value=0;
-  document.getElementById("paymentMode").value="UPI";
-  currentBillItems=[];
-  renderBillItems();
-  setToday();
-  document.getElementById("serviceSelect").value="";
-  document.getElementById("serviceQty").value=1;
-  document.getElementById("serviceRate").value="";
-  document.getElementById("paymentStatus").value="DUE";
+
+document.getElementById("customerName").value="";
+document.getElementById("customerMobile").value="";
+document.getElementById("advancePaid").value=0;
+document.getElementById("paymentMode").value="UPI";
+
+currentBillItems=[];
+
+renderBillItems();
+
+document.getElementById("serviceSelect").value="";
+document.getElementById("serviceQty").value=1;
+document.getElementById("serviceRate").value="";
+
+const date=todayISO();
+
+document.getElementById("billDate").value=date;
+document.getElementById("billNo").value=
+generateBillNo(date);
+
 }
+
+
+document.getElementById("billDate")
+.addEventListener("change",()=>{
+
+const date=
+document.getElementById("billDate").value;
+
+if(date)
+document.getElementById("billNo").value=
+generateBillNo(date);
+
+});
+
+
+/* =========================================================
+   BILL ITEMS
+========================================================= */
+
+let currentBillItems=[];
+
 
 function addServiceToBill(){
-  const service=document.getElementById("serviceSelect").value;
-  const qty=Number(document.getElementById("serviceQty").value);
-  const rate=Number(document.getElementById("serviceRate").value);
 
-  if(!service){
-    alert("Please select a service.");
-    return;
-  }
+const service=
+document.getElementById("serviceSelect").value;
 
-  if(qty<=0 || rate<0 || isNaN(rate)){
-    alert("Please enter a valid quantity and rate.");
-    return;
-  }
+const qty=Number(
+document.getElementById("serviceQty").value
+);
 
-  currentBillItems.push({
-    service,
-    qty,
-    rate,
-    amount:qty*rate
-  });
+const rate=Number(
+document.getElementById("serviceRate").value
+);
 
-  renderBillItems();
+if(!service){
 
-  document.getElementById("serviceQty").value=1;
+alert("Please select a service.");
+
+return;
+
 }
 
-function removeBillItem(index){
-  currentBillItems.splice(index,1);
-  renderBillItems();
+if(qty<=0||rate<0||isNaN(rate)){
+
+alert("Please enter valid quantity and rate.");
+
+return;
+
 }
+
+currentBillItems.push({
+
+service,
+qty,
+rate,
+amount:qty*rate
+
+});
+
+renderBillItems();
+
+document.getElementById("serviceQty").value=1;
+
+}
+
+
+function removeBillItem(i){
+
+currentBillItems.splice(i,1);
+
+renderBillItems();
+
+}
+
 
 function renderBillItems(){
-  const tbody=document.getElementById("billItems");
 
-  if(!currentBillItems.length){
-    tbody.innerHTML='<tr><td colspan="6" class="empty">No service added yet.</td></tr>';
-    updateBillTotals();
-    return;
-  }
+const tbody=document.getElementById("billItems");
 
-  tbody.innerHTML=currentBillItems.map((item,i)=>`
-    <tr>
-      <td>${i+1}</td>
-      <td>${escapeHtml(item.service)}</td>
-      <td>${item.qty}</td>
-      <td>${money(item.rate)}</td>
-      <td>${money(item.amount)}</td>
-      <td class="no-print">
-        <button class="btn btn-danger" onclick="removeBillItem(${i})">Remove</button>
-      </td>
-    </tr>
-  `).join("");
+if(!currentBillItems.length){
 
-  updateBillTotals();
+tbody.innerHTML=
+`<tr>
+<td colspan="6" class="empty">
+No service added yet.
+</td>
+</tr>`;
+
+updateBillTotals();
+
+return;
+
 }
+
+tbody.innerHTML=currentBillItems.map(
+(item,i)=>`
+
+<tr>
+
+<td>${i+1}</td>
+
+<td>${escapeHtml(item.service)}</td>
+
+<td>${item.qty}</td>
+
+<td>${money(item.rate)}</td>
+
+<td>${money(item.amount)}</td>
+
+<td class="no-print">
+
+<button class="btn btn-danger"
+onclick="removeBillItem(${i})">
+Remove
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+updateBillTotals();
+
+}
+
 
 function updateBillTotals(){
-  const total=currentBillItems.reduce((sum,x)=>sum+x.amount,0);
-  let advance=Number(document.getElementById("advancePaid").value)||0;
 
-  if(advance>total) advance=total;
+const total=currentBillItems.reduce(
+(s,i)=>s+i.amount,0
+);
 
-  document.getElementById("advancePaid").value=advance;
+let advance=Number(
+document.getElementById("advancePaid").value
+)||0;
 
-  const due=total-advance;
+if(advance>total){
 
-  let status="DUE";
+advance=total;
 
-  if(total===0) status="DUE";
-  else if(due===0) status="PAID";
-  else if(advance>0) status="PARTIAL";
+document.getElementById("advancePaid").value=advance;
 
-  document.getElementById("billTotal").textContent=money(total);
-  document.getElementById("billDue").textContent=money(due);
-  document.getElementById("paymentStatus").value=status;
 }
+
+const due=total-advance;
+
+let status="DUE";
+
+if(total>0&&due===0)
+status="PAID";
+else if(advance>0)
+status="PARTIAL";
+
+document.getElementById("billTotal")
+.textContent=money(total);
+
+document.getElementById("billDue")
+.textContent=money(due);
+
+document.getElementById("paymentStatus")
+.value=status;
+
+}
+
+
+/* =========================================================
+   SAVE BILL
+========================================================= */
 
 function saveBill(){
-  const name=document.getElementById("customerName").value.trim();
-  const mobile=document.getElementById("customerMobile").value.trim();
-  const date=document.getElementById("billDate").value;
-  const advance=Number(document.getElementById("advancePaid").value)||0;
-  const paymentMode=document.getElementById("paymentMode").value;
 
-  if(!name){
-    alert("Please enter customer name.");
-    return;
-  }
+const name=
+document.getElementById("customerName")
+.value.trim();
 
-  if(!date){
-    alert("Please select date.");
-    return;
-  }
+const mobile=
+document.getElementById("customerMobile")
+.value.trim();
 
-  if(!currentBillItems.length){
-    alert("Please add at least one service.");
-    return;
-  }
+const date=
+document.getElementById("billDate").value;
 
-  const total=currentBillItems.reduce((sum,x)=>sum+x.amount,0);
+const advance=Number(
+document.getElementById("advancePaid").value
+)||0;
 
-  if(advance>total){
-    alert("Advance cannot be greater than total amount.");
-    return;
-  }
+const mode=
+document.getElementById("paymentMode").value;
 
-  const due=total-advance;
+if(!name){
 
-  let status="DUE";
-  if(due===0) status="PAID";
-  else if(advance>0) status="PARTIAL";
+alert("Please enter customer name.");
 
-  const bill={
-    id:Date.now().toString(),
-    billNo:generateBillNo(date),
-    date,
-    customerName:name,
-    mobile,
-    items:JSON.parse(JSON.stringify(currentBillItems)),
-    total,
-    paid:advance,
-    due,
-    status,
-    paymentMode
-  };
+return;
 
-  data.bills.push(bill);
-  saveData();
-
-  renderBillPreview(bill);
-  document.getElementById("printArea").style.display="block";
-
-  clearBillForm();
-
-  alert("Bill saved successfully.");
 }
+
+if(!currentBillItems.length){
+
+alert("Please add at least one service.");
+
+return;
+
+}
+
+const total=currentBillItems.reduce(
+(s,i)=>s+i.amount,0
+);
+
+if(advance>total){
+
+alert("Advance cannot be greater than total.");
+
+return;
+
+}
+
+const due=total-advance;
+
+const status=
+due===0
+?"PAID"
+:advance>0
+?"PARTIAL"
+:"DUE";
+
+
+const bill={
+
+id:Date.now().toString(),
+
+billNo:generateBillNo(date),
+
+date,
+
+customerName:name,
+
+mobile,
+
+items:JSON.parse(
+JSON.stringify(currentBillItems)
+),
+
+total,
+
+paid:advance,
+
+due,
+
+status,
+
+paymentMode:mode
+
+};
+
+
+data.bills.push(bill);
+
+saveData();
+
+renderBillPreview(bill);
+
+document.getElementById("printArea")
+.style.display="block";
+
+clearBillForm();
+
+updateAll();
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+}
+
+
+/* =========================================================
+   BILL PREVIEW
+========================================================= */
 
 function renderBillPreview(bill){
-  const serviceHtml=services.map((s,i)=>
-    `<div>${i+1}. ${escapeHtml(s)}</div>`
-  ).join("");
 
-  const items=bill.items.map((item,i)=>`
-    <tr>
-      <td>${i+1}</td>
-      <td>${escapeHtml(item.service)}</td>
-      <td>${item.qty}</td>
-      <td>${money(item.rate)}</td>
-      <td>${money(item.amount)}</td>
-    </tr>
-  `).join("");
+const items=bill.items.map(
+(item,i)=>`
 
-  const statusClass=bill.status==="PAID"
-    ?"status-paid"
-    :bill.status==="PARTIAL"
-    ?"status-partial"
-    :"status-due";
+<tr>
 
-  document.getElementById("printArea").innerHTML=`
-    <div class="bill-preview">
+<td>${i+1}</td>
 
-      <div class="bill-header">
-        <h2>GHAR BAITHKE DIGISEVA</h2>
-        <p><strong>Kumar</strong></p>
-        <p>WhatsApp: 7327933225</p>
-        <p><strong>Aap Ghar Baithiye, Kaam Hum Karenge.</strong></p>
-      </div>
+<td>${escapeHtml(item.service)}</td>
 
-      <div class="bill-info">
-        <div><strong>Bill No:</strong> ${bill.billNo}</div>
-        <div><strong>Date:</strong> ${displayDate(bill.date)}</div>
-        <div><strong>Customer:</strong> ${escapeHtml(bill.customerName)}</div>
-        <div><strong>Mobile:</strong> ${escapeHtml(bill.mobile || "-")}</div>
-      </div>
+<td>${item.qty}</td>
 
-      <h3>Work Details</h3>
+<td>${money(item.rate)}</td>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Sl.</th>
-            <th>Service / Work</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>${items}</tbody>
-      </table>
+<td>${money(item.amount)}</td>
 
-      <div class="bill-total">
-        <div class="total-row">
-          <span>Total Amount</span>
-          <strong>${money(bill.total)}</strong>
-        </div>
-        <div class="total-row">
-          <span>Advance Paid</span>
-          <strong>${money(bill.paid)}</strong>
-        </div>
-        <div class="total-row">
-          <span>Balance Due</span>
-          <strong>${money(bill.due)}</strong>
-        </div>
-        <div class="total-row">
-          <span>Payment Status</span>
-          <span class="status ${statusClass}">${bill.status}</span>
-        </div>
-        <div class="total-row">
-          <span>Payment Mode</span>
-          <strong>${escapeHtml(bill.paymentMode)}</strong>
-        </div>
-      </div>
+</tr>
 
-      <div class="service-list">
-        <h3>OUR SERVICES</h3>
-        <div class="service-list-grid">${serviceHtml}</div>
-      </div>
+`).join("");
 
-      <div class="footer-note">
-        Thank you for choosing Ghar Baithke Digiseva.<br>
-        Same Day Service is subject to government portal/server availability.<br>
-        WhatsApp: 7327933225
-      </div>
 
-      <div class="actions no-print">
-        <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save PDF</button>
-        <button class="btn btn-green" onclick="shareBillWhatsApp('${bill.id}')">📲 Share on WhatsApp</button>
-        <button class="btn btn-light" onclick="document.getElementById('printArea').style.display='none'">Close Preview</button>
-      </div>
+const serviceList=services.map(
+(s,i)=>
+`<div>${i+1}. ${escapeHtml(s)}</div>`
+).join("");
 
-    </div>
-  `;
 
-  window.scrollTo({top:0,behavior:"smooth"});
+let qr="";
+
+if(data.settings.qr){
+
+qr=`
+<img class="qr-image"
+src="${data.settings.qr}"
+alt="Payment QR Code">
+`;
+
+}else{
+
+qr=`
+<div class="qr-placeholder">
+PAYMENT<br>
+QR CODE<br>
+HERE
+</div>
+`;
+
 }
 
-function shareBillWhatsApp(id){
-  const bill=data.bills.find(b=>b.id===id);
-  if(!bill) return;
 
-  let message=
-`GHAR BAITHKE DIGISEVA
-Kumar
-WhatsApp: 7327933225
+const statusClass=
+bill.status==="PAID"
+?"paid"
+:bill.status==="PARTIAL"
+?"partial"
+:"due";
+
+
+document.getElementById("printArea")
+.innerHTML=`
+
+<div class="bill-preview">
+
+<div class="bill-header">
+
+<h2>
+${escapeHtml(data.settings.business)}
+</h2>
+
+<p>
+<strong>${escapeHtml(data.settings.name)}</strong>
+</p>
+
+<p>
+WhatsApp: ${escapeHtml(data.settings.whatsapp)}
+</p>
+
+<p>
+<strong>
+Aap Ghar Baithiye, Kaam Hum Karenge.
+</strong>
+</p>
+
+</div>
+
+
+<div class="bill-info">
+
+<div>
+<strong>Bill No:</strong>
+${bill.billNo}
+</div>
+
+<div>
+<strong>Date:</strong>
+${displayDate(bill.date)}
+</div>
+
+<div>
+<strong>Customer:</strong>
+${escapeHtml(bill.customerName)}
+</div>
+
+<div>
+<strong>Mobile:</strong>
+${escapeHtml(bill.mobile||"-")}
+</div>
+
+</div>
+
+
+<h3>Work Details</h3>
+
+
+<table>
+
+<thead>
+
+<tr>
+<th>Sl.</th>
+<th>Service / Work</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Amount</th>
+</tr>
+
+</thead>
+
+<tbody>
+${items}
+</tbody>
+
+</table>
+
+
+<div class="total-box">
+
+<div class="total-row">
+<span>Total Amount</span>
+<strong>${money(bill.total)}</strong>
+</div>
+
+<div class="total-row">
+<span>Advance Paid</span>
+<strong>${money(bill.paid)}</strong>
+</div>
+
+<div class="total-row">
+<span>Balance Due</span>
+<strong>${money(bill.due)}</strong>
+</div>
+
+<div class="total-row">
+<span>Payment Status</span>
+<span class="status ${statusClass}">
+${bill.status}
+</span>
+</div>
+
+<div class="total-row">
+<span>Payment Mode</span>
+<strong>${escapeHtml(bill.paymentMode)}</strong>
+</div>
+
+</div>
+
+
+<div class="qr-section">
+
+<h4>SCAN TO MAKE PAYMENT</h4>
+
+${qr}
+
+<p style="font-size:9px;color:#687386;margin:7px 0 0">
+UPI Payment
+</p>
+
+</div>
+
+
+<div class="service-list">
+
+<h3>OUR SERVICES</h3>
+
+<div class="service-list-grid">
+
+${serviceList}
+
+</div>
+
+</div>
+
+
+<div class="footer-note">
+
+Thank you for choosing
+<strong>${escapeHtml(data.settings.business)}</strong>.
+
+<br>
+
+Same Day Service is subject to
+government portal/server availability.
+
+<br>
+
+WhatsApp:
+<strong>${escapeHtml(data.settings.whatsapp)}</strong>
+
+</div>
+
+
+<div class="actions no-print">
+
+<button class="btn btn-primary"
+onclick="window.print()">
+🖨 Print / Save PDF
+</button>
+
+<button class="btn btn-green"
+onclick="shareBillWhatsApp('${bill.id}')">
+📲 WhatsApp
+</button>
+
+<button class="btn btn-light"
+onclick="document.getElementById('printArea').style.display='none'">
+Close
+</button>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* =========================================================
+   WHATSAPP BILL
+========================================================= */
+
+function shareBillWhatsApp(id){
+
+const bill=data.bills.find(b=>b.id===id);
+
+if(!bill)return;
+
+let message=
+`${data.settings.business}
+${data.settings.name}
+WhatsApp: ${data.settings.whatsapp}
 
 Bill No: ${bill.billNo}
 Date: ${displayDate(bill.date)}
@@ -1292,375 +2297,1291 @@ Customer: ${bill.customerName}
 Work Details:
 `;
 
-  bill.items.forEach((item,i)=>{
-    message+=`${i+1}. ${item.service} | Qty: ${item.qty} | ${money(item.amount)}\n`;
-  });
+bill.items.forEach(
+(item,i)=>{
 
-  message+=`
+message+=
+`${i+1}. ${item.service} | Qty: ${item.qty} | ${money(item.amount)}\n`;
+
+});
+
+
+message+=`
 Total Amount: ${money(bill.total)}
 Advance Paid: ${money(bill.paid)}
 Balance Due: ${money(bill.due)}
-Payment Status: ${bill.status}
+Status: ${bill.status}
 
-Aap Ghar Baithiye, Kaam Hum Karenge.`;
+Aap Ghar Baithiye, Kaam Hum Karenge.
+`;
 
-  const mobile=bill.mobile.replace(/\D/g,"");
 
-  const url=mobile.length>=10
-    ?`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`
-    :`https://wa.me/?text=${encodeURIComponent(message)}`;
+const mobile=
+(bill.mobile||"").replace(/\D/g,"");
 
-  window.open(url,"_blank");
+const url=
+mobile.length>=10
+?`https://wa.me/91${mobile}?text=${encodeURIComponent(message)}`
+:`https://wa.me/?text=${encodeURIComponent(message)}`;
+
+window.open(url,"_blank");
+
 }
 
-function updateDashboard(){
-  document.getElementById("todayCollection").textContent=money(getCollection("today"));
-  document.getElementById("weekCollection").textContent=money(getCollection("week"));
-  document.getElementById("monthCollection").textContent=money(getCollection("month"));
-  document.getElementById("yearCollection").textContent=money(getCollection("year"));
-  document.getElementById("totalCollection").textContent=money(getCollection("all"));
 
-  const today=todayISO();
+/* =========================================================
+   TASK MANAGEMENT
+========================================================= */
 
-  document.getElementById("todayBills").textContent=
-    data.bills.filter(b=>b.date===today).length;
+function clearTaskForm(){
 
-  const customers=new Set(data.bills.map(b=>b.customerName.toLowerCase()));
-  document.getElementById("customerCount").textContent=customers.size;
+document.getElementById("taskCustomer").value="";
+document.getElementById("taskMobile").value="";
+document.getElementById("taskService").value="";
+document.getElementById("taskDate").value=todayISO();
+document.getElementById("taskPriority").value="Normal";
+document.getElementById("taskStatus").value="PENDING";
+document.getElementById("taskNotes").value="";
 
-  document.getElementById("totalDue").textContent=
-    money(data.bills.reduce((s,b)=>s+b.due,0));
 }
 
-function getCollection(period){
-  const now=new Date();
 
-  return data.bills.reduce((sum,bill)=>{
-    if(!bill.paid) return sum;
+function addTask(){
 
-    const d=new Date(bill.date+"T00:00:00");
+const customer=
+document.getElementById("taskCustomer")
+.value.trim();
 
-    let include=false;
+const mobile=
+document.getElementById("taskMobile")
+.value.trim();
 
-    if(period==="all") include=true;
+const service=
+document.getElementById("taskService").value;
 
-    if(period==="today"){
-      include=bill.date===todayISO();
-    }
+const date=
+document.getElementById("taskDate").value;
 
-    if(period==="week"){
-      const start=new Date(now);
-      const day=start.getDay();
-      const diff=day===0 ? 6 : day-1;
-      start.setDate(start.getDate()-diff);
-      start.setHours(0,0,0,0);
+const priority=
+document.getElementById("taskPriority").value;
 
-      const end=new Date(start);
-      end.setDate(end.getDate()+7);
+const status=
+document.getElementById("taskStatus").value;
 
-      include=d>=start && d<end;
-    }
+const notes=
+document.getElementById("taskNotes").value.trim();
 
-    if(period==="month"){
-      include=d.getMonth()===now.getMonth() &&
-              d.getFullYear()===now.getFullYear();
-    }
 
-    if(period==="year"){
-      include=d.getFullYear()===now.getFullYear();
-    }
+if(!customer){
 
-    return include ? sum+Number(bill.paid) : sum;
-  },0);
+alert("Please enter customer name.");
+
+return;
+
 }
 
-function renderHistory(){
-  const q=(document.getElementById("historySearch").value||"").toLowerCase();
-  const filter=document.getElementById("historyFilter").value;
+if(!service){
 
-  let bills=[...data.bills].reverse();
+alert("Please select work/service.");
 
-  bills=bills.filter(b=>{
-    const match=!q ||
-      b.billNo.toLowerCase().includes(q) ||
-      b.customerName.toLowerCase().includes(q) ||
-      (b.mobile||"").includes(q);
+return;
 
-    const statusMatch=filter==="ALL" || b.status===filter;
-
-    return match && statusMatch;
-  });
-
-  const tbody=document.getElementById("historyTable");
-
-  if(!bills.length){
-    tbody.innerHTML='<tr><td colspan="8" class="empty">No bills found.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML=bills.map(b=>`
-    <tr>
-      <td>${b.billNo}</td>
-      <td>${displayDate(b.date)}</td>
-      <td>${escapeHtml(b.customerName)}</td>
-      <td>${money(b.total)}</td>
-      <td>${money(b.paid)}</td>
-      <td>${money(b.due)}</td>
-      <td><span class="status ${b.status==="PAID"?"status-paid":b.status==="PARTIAL"?"status-partial":"status-due"}">${b.status}</span></td>
-      <td>
-        <button class="btn btn-light" onclick="viewBill('${b.id}')">View</button>
-      </td>
-    </tr>
-  `).join("");
 }
 
-function viewBill(id){
-  const bill=data.bills.find(b=>b.id===id);
-  if(!bill) return;
 
-  document.getElementById("printArea").style.display="block";
-  renderBillPreview(bill);
+const task={
+
+id:Date.now().toString(),
+
+customer,
+
+mobile,
+
+service,
+
+receivedDate:date||todayISO(),
+
+completedDate:"",
+
+priority,
+
+status,
+
+notes
+
+};
+
+
+data.tasks.push(task);
+
+saveData();
+
+clearTaskForm();
+
+renderTasks();
+
+updateDashboard();
+
+alert("Work added successfully.");
+
 }
 
-function renderCustomers(){
-  const q=(document.getElementById("customerSearch").value||"").toLowerCase();
 
-  const map={};
+function taskStatusClass(status){
 
-  data.bills.forEach(b=>{
-    const key=b.customerName.toLowerCase();
+if(status==="DONE")
+return"done";
 
-    if(!map[key]){
-      map[key]={
-        name:b.customerName,
-        mobile:b.mobile,
-        bills:0,
-        total:0,
-        paid:0,
-        due:0
-      };
-    }
+if(status==="IN PROGRESS")
+return"progress";
 
-    map[key].bills++;
-    map[key].total+=b.total;
-    map[key].paid+=b.paid;
-    map[key].due+=b.due;
-  });
+return"pending";
 
-  const customers=Object.values(map).filter(c=>
-    !q ||
-    c.name.toLowerCase().includes(q) ||
-    (c.mobile||"").includes(q)
-  );
-
-  const tbody=document.getElementById("customerTable");
-
-  if(!customers.length){
-    tbody.innerHTML='<tr><td colspan="6" class="empty">No customers found.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML=customers.map(c=>`
-    <tr>
-      <td><strong>${escapeHtml(c.name)}</strong></td>
-      <td>${escapeHtml(c.mobile||"-")}</td>
-      <td>${c.bills}</td>
-      <td>${money(c.total)}</td>
-      <td>${money(c.paid)}</td>
-      <td>${money(c.due)}</td>
-    </tr>
-  `).join("");
 }
 
-function renderDues(){
-  const bills=data.bills.filter(b=>b.due>0).reverse();
 
-  const total=bills.reduce((s,b)=>s+b.due,0);
+function renderTasks(){
 
-  document.getElementById("duePageTotal").textContent=money(total);
+const q=
+(
+document.getElementById("taskSearch")
+?.value||""
+).toLowerCase();
 
-  const tbody=document.getElementById("dueTable");
+const filter=
+document.getElementById("taskFilter")
+?.value||"ALL";
 
-  if(!bills.length){
-    tbody.innerHTML='<tr><td colspan="7" class="empty">No outstanding payments.</td></tr>';
-    return;
-  }
+const pf=
+document.getElementById("taskPriorityFilter")
+?.value||"ALL";
 
-  tbody.innerHTML=bills.map(b=>`
-    <tr>
-      <td>${b.billNo}</td>
-      <td>${escapeHtml(b.customerName)}</td>
-      <td>${displayDate(b.date)}</td>
-      <td>${money(b.total)}</td>
-      <td>${money(b.paid)}</td>
-      <td><strong>${money(b.due)}</strong></td>
-      <td>
-        <button class="btn btn-warning" onclick="addPayment('${b.id}')">Add Payment</button>
-      </td>
-    </tr>
-  `).join("");
-}
 
-function addPayment(id){
-  const bill=data.bills.find(b=>b.id===id);
-  if(!bill) return;
+let tasks=[...data.tasks].reverse();
 
-  const amount=Number(prompt(`Current due: ${money(bill.due)}\nEnter payment received:`));
 
-  if(!amount || amount<=0) return;
+tasks=tasks.filter(t=>{
 
-  if(amount>bill.due){
-    alert("Payment cannot be greater than due amount.");
-    return;
-  }
+const text=
+(
+t.customer+" "+
+t.mobile+" "+
+t.service+" "+
+t.notes
+).toLowerCase();
 
-  bill.paid+=amount;
-  bill.due-=amount;
+const searchMatch=
+!q||text.includes(q);
 
-  if(bill.due===0) bill.status="PAID";
-  else bill.status="PARTIAL";
+const statusMatch=
+filter==="ALL"||t.status===filter;
 
-  saveData();
+const priorityMatch=
+pf==="ALL"||t.priority===pf;
 
-  renderDues();
-  updateDashboard();
-  updateReports();
+return searchMatch&&
+statusMatch&&
+priorityMatch;
 
-  alert("Payment updated successfully.");
-}
-
-function renderServices(){
-  const tbody=document.getElementById("serviceTable");
-
-  tbody.innerHTML=services.map((s,i)=>`
-    <tr>
-      <td>${i+1}</td>
-      <td>${escapeHtml(s)}</td>
-      <td>
-        <input
-          type="number"
-          min="0"
-          value="${data.rates[s]||""}"
-          id="rate-${i}"
-          style="width:120px;padding:7px;border:1px solid #ccd5e0;border-radius:6px"
-        >
-      </td>
-      <td>
-        <button class="btn btn-primary" onclick="saveRate(${i})">Save</button>
-      </td>
-    </tr>
-  `).join("");
-}
-
-function saveRate(index){
-  const service=services[index];
-  const value=document.getElementById(`rate-${index}`).value;
-
-  data.rates[service]=value;
-  saveData();
-
-  document.getElementById("serviceRate").value=value;
-
-  alert("Rate saved.");
-}
-
-function updateReports(){
-  document.getElementById("reportToday").textContent=money(getCollection("today"));
-  document.getElementById("reportWeek").textContent=money(getCollection("week"));
-  document.getElementById("reportMonth").textContent=money(getCollection("month"));
-  document.getElementById("reportYear").textContent=money(getCollection("year"));
-  document.getElementById("reportLifetime").textContent=money(getCollection("all"));
-
-  document.getElementById("reportBills").textContent=data.bills.length;
-
-  document.getElementById("reportBillValue").textContent=
-    money(data.bills.reduce((s,b)=>s+b.total,0));
-
-  document.getElementById("reportDue").textContent=
-    money(data.bills.reduce((s,b)=>s+b.due,0));
-}
-
-function downloadBackup(){
-  const blob=new Blob(
-    [JSON.stringify(data,null,2)],
-    {type:"application/json"}
-  );
-
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-
-  a.href=url;
-  a.download=`GharBaithkeDigiseva_Backup_${todayISO()}.json`;
-
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-function restoreBackup(event){
-  const file=event.target.files[0];
-
-  if(!file) return;
-
-  const reader=new FileReader();
-
-  reader.onload=function(e){
-    try{
-      const restored=JSON.parse(e.target.result);
-
-      if(!restored.bills || !restored.rates){
-        throw new Error("Invalid backup");
-      }
-
-      if(confirm("Restore this backup? Current data will be replaced.")){
-        data=restored;
-        saveData();
-
-        alert("Backup restored successfully.");
-        location.reload();
-      }
-
-    }catch(err){
-      alert("Invalid backup file.");
-    }
-  };
-
-  reader.readAsText(file);
-}
-
-function deleteAllData(){
-  const confirmText=prompt(
-    "This will permanently delete all billing data from this browser.\nType DELETE to confirm:"
-  );
-
-  if(confirmText==="DELETE"){
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  }
-}
-
-function escapeHtml(str){
-  return String(str||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-document.getElementById("billDate").addEventListener("change",()=>{
-  const date=document.getElementById("billDate").value;
-  if(date) document.getElementById("billNo").value=generateBillNo(date);
 });
 
-populateServices();
-clearBillForm();
+
+const tbody=
+document.getElementById("taskTable");
+
+
+if(!tasks.length){
+
+tbody.innerHTML=
+`<tr>
+<td colspan="8" class="empty">
+No work found.
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+tbody.innerHTML=tasks.map(
+t=>`
+
+<tr>
+
+<td>
+
+<strong>
+${escapeHtml(t.customer)}
+</strong>
+
+<br>
+
+<small>
+${escapeHtml(t.mobile||"-")}
+</small>
+
+</td>
+
+<td>
+${escapeHtml(t.service)}
+</td>
+
+<td>
+${displayDate(t.receivedDate)}
+</td>
+
+<td>
+${t.completedDate
+?displayDate(t.completedDate)
+:"-"}
+</td>
+
+<td class="${
+t.priority==="High"
+?"priority-high"
+:"priority-normal"
+}">
+
+${t.priority==="High"
+?"⚡ HIGH"
+:"Normal"}
+
+</td>
+
+<td>
+
+<span class="status ${taskStatusClass(t.status)}">
+
+${t.status}
+
+</span>
+
+</td>
+
+<td>
+${escapeHtml(t.notes||"-")}
+</td>
+
+<td>
+
+${
+t.status!=="DONE"
+?`
+<button
+class="btn btn-blue"
+onclick="startTask('${t.id}')">
+${t.status==="PENDING"
+?"Start"
+:"Mark Done"}
+</button>
+`
+:""
+}
+
+<button
+class="btn btn-danger"
+onclick="deleteTask('${t.id}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+function startTask(id){
+
+const task=data.tasks.find(t=>t.id===id);
+
+if(!task)return;
+
+
+if(task.status==="PENDING"){
+
+task.status="IN PROGRESS";
+
+saveData();
+
+renderTasks();
+
+updateDashboard();
+
+return;
+
+}
+
+
+if(task.status==="IN PROGRESS"){
+
+if(
+confirm(
+"Mark this work as DONE?"
+)
+){
+
+task.status="DONE";
+
+task.completedDate=todayISO();
+
+saveData();
+
+renderTasks();
+
+updateDashboard();
+
+}
+
+}
+
+}
+
+
+function deleteTask(id){
+
+if(!confirm(
+"Delete this work record?"
+))return;
+
+data.tasks=
+data.tasks.filter(t=>t.id!==id);
+
+saveData();
+
+renderTasks();
+
+updateDashboard();
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function updateDashboard(){
+
+document.getElementById("todayCollection")
+.textContent=money(getCollection("today"));
+
+document.getElementById("weekCollection")
+.textContent=money(getCollection("week"));
+
+document.getElementById("monthCollection")
+.textContent=money(getCollection("month"));
+
+document.getElementById("yearCollection")
+.textContent=money(getCollection("year"));
+
+document.getElementById("totalCollection")
+.textContent=money(getCollection("all"));
+
+
+const pending=data.tasks.filter(
+t=>t.status==="PENDING"
+).length;
+
+const progress=data.tasks.filter(
+t=>t.status==="IN PROGRESS"
+).length;
+
+const today=todayISO();
+
+const doneToday=data.tasks.filter(
+t=>
+t.status==="DONE"&&
+t.completedDate===today
+).length;
+
+const urgent=data.tasks.filter(
+t=>
+t.status!=="DONE"&&
+t.priority==="High"
+).length;
+
+
+document.getElementById("pendingCount")
+.textContent=pending;
+
+document.getElementById("progressCount")
+.textContent=progress;
+
+document.getElementById("doneTodayCount")
+.textContent=doneToday;
+
+document.getElementById("urgentCount")
+.textContent=urgent;
+
+
+document.getElementById("totalDue")
+.textContent=money(
+data.bills.reduce(
+(s,b)=>s+b.due,0
+)
+);
+
+
+const recent=
+data.tasks
+.filter(t=>t.status!=="DONE")
+.slice()
+.reverse()
+.slice(0,8);
+
+
+const tbody=
+document.getElementById("dashboardTasks");
+
+
+if(!recent.length){
+
+tbody.innerHTML=
+`<tr>
+<td colspan="6" class="empty">
+No pending work.
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+tbody.innerHTML=
+recent.map(
+t=>`
+
+<tr>
+
+<td>
+${escapeHtml(t.customer)}
+</td>
+
+<td>
+${escapeHtml(t.service)}
+</td>
+
+<td>
+${displayDate(t.receivedDate)}
+</td>
+
+<td class="${
+t.priority==="High"
+?"priority-high"
+:"priority-normal"
+}">
+${t.priority==="High"
+?"⚡ HIGH"
+:"Normal"}
+</td>
+
+<td>
+<span class="status ${taskStatusClass(t.status)}">
+${t.status}
+</span>
+</td>
+
+<td>
+
+<button class="btn btn-blue"
+onclick="showPageById('tasks')">
+View
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+/* =========================================================
+   COLLECTION
+========================================================= */
+
+function getCollection(period){
+
+const now=new Date();
+
+return data.bills.reduce(
+(sum,bill)=>{
+
+if(!bill.paid)return sum;
+
+const d=
+new Date(bill.date+"T00:00:00");
+
+let include=false;
+
+
+if(period==="all")
+include=true;
+
+
+if(period==="today")
+include=bill.date===todayISO();
+
+
+if(period==="month")
+include=
+d.getMonth()===now.getMonth()&&
+d.getFullYear()===now.getFullYear();
+
+
+if(period==="year")
+include=
+d.getFullYear()===now.getFullYear();
+
+
+if(period==="week"){
+
+const start=new Date(now);
+
+const day=start.getDay();
+
+const diff=day===0?6:day-1;
+
+start.setDate(
+start.getDate()-diff
+);
+
+start.setHours(0,0,0,0);
+
+const end=new Date(start);
+
+end.setDate(
+end.getDate()+7
+);
+
+include=d>=start&&d<end;
+
+}
+
+
+return include
+?sum+Number(bill.paid)
+:sum;
+
+},0);
+
+}
+
+
+/* =========================================================
+   BILL HISTORY
+========================================================= */
+
+function renderHistory(){
+
+const q=
+(
+document.getElementById("historySearch")
+?.value||""
+).toLowerCase();
+
+const filter=
+document.getElementById("historyFilter")
+?.value||"ALL";
+
+
+let bills=[...data.bills].reverse();
+
+
+bills=bills.filter(b=>{
+
+const match=
+!q||
+b.billNo.toLowerCase().includes(q)||
+b.customerName.toLowerCase().includes(q)||
+(b.mobile||"").includes(q);
+
+const statusMatch=
+filter==="ALL"||b.status===filter;
+
+return match&&statusMatch;
+
+});
+
+
+const tbody=
+document.getElementById("historyTable");
+
+
+if(!bills.length){
+
+tbody.innerHTML=
+`<tr>
+<td colspan="8" class="empty">
+No bills found.
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+tbody.innerHTML=
+bills.map(
+b=>`
+
+<tr>
+
+<td>${b.billNo}</td>
+
+<td>${displayDate(b.date)}</td>
+
+<td>${escapeHtml(b.customerName)}</td>
+
+<td>${money(b.total)}</td>
+
+<td>${money(b.paid)}</td>
+
+<td>${money(b.due)}</td>
+
+<td>
+
+<span class="status ${
+b.status==="PAID"
+?"paid"
+:b.status==="PARTIAL"
+?"partial"
+:"due"
+}">
+
+${b.status}
+
+</span>
+
+</td>
+
+<td>
+
+<button class="btn btn-light"
+onclick="viewBill('${b.id}')">
+View
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+function viewBill(id){
+
+const bill=data.bills.find(b=>b.id===id);
+
+if(!bill)return;
+
+document.getElementById("printArea")
+.style.display="block";
+
+renderBillPreview(bill);
+
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+}
+
+
+/* =========================================================
+   CUSTOMERS
+========================================================= */
+
+function renderCustomers(){
+
+const q=
+(
+document.getElementById("customerSearch")
+?.value||""
+).toLowerCase();
+
+const map={};
+
+
+data.bills.forEach(b=>{
+
+const key=b.customerName.toLowerCase();
+
+if(!map[key]){
+
+map[key]={
+name:b.customerName,
+mobile:b.mobile,
+bills:0,
+total:0,
+paid:0,
+due:0
+};
+
+}
+
+map[key].bills++;
+map[key].total+=b.total;
+map[key].paid+=b.paid;
+map[key].due+=b.due;
+
+});
+
+
+const customers=
+Object.values(map).filter(c=>
+!q||
+c.name.toLowerCase().includes(q)||
+(c.mobile||"").includes(q)
+);
+
+
+const tbody=
+document.getElementById("customerTable");
+
+
+if(!customers.length){
+
+tbody.innerHTML=
+`<tr>
+<td colspan="6" class="empty">
+No customers found.
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+tbody.innerHTML=
+customers.map(
+c=>`
+
+<tr>
+
+<td>
+<strong>${escapeHtml(c.name)}</strong>
+</td>
+
+<td>
+${escapeHtml(c.mobile||"-")}
+</td>
+
+<td>${c.bills}</td>
+
+<td>${money(c.total)}</td>
+
+<td>${money(c.paid)}</td>
+
+<td>${money(c.due)}</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+/* =========================================================
+   DUES
+========================================================= */
+
+function renderDues(){
+
+const bills=data.bills
+.filter(b=>b.due>0)
+.reverse();
+
+const total=bills.reduce(
+(s,b)=>s+b.due,0
+);
+
+document.getElementById("duePageTotal")
+.textContent=money(total);
+
+
+const tbody=
+document.getElementById("dueTable");
+
+
+if(!bills.length){
+
+tbody.innerHTML=
+`<tr>
+<td colspan="7" class="empty">
+No outstanding payments.
+</td>
+</tr>`;
+
+return;
+
+}
+
+
+tbody.innerHTML=
+bills.map(
+b=>`
+
+<tr>
+
+<td>${b.billNo}</td>
+
+<td>${escapeHtml(b.customerName)}</td>
+
+<td>${displayDate(b.date)}</td>
+
+<td>${money(b.total)}</td>
+
+<td>${money(b.paid)}</td>
+
+<td>
+<strong>${money(b.due)}</strong>
+</td>
+
+<td>
+
+<button class="btn btn-warning"
+onclick="addPayment('${b.id}')">
+Add Payment
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+function addPayment(id){
+
+const bill=data.bills.find(b=>b.id===id);
+
+if(!bill)return;
+
+const amount=Number(
+prompt(
+"Current Due: "+money(bill.due)+
+"\n\nEnter payment received:"
+)
+);
+
+
+if(!amount||amount<=0)return;
+
+if(amount>bill.due){
+
+alert(
+"Payment cannot be greater than due."
+);
+
+return;
+
+}
+
+
+bill.paid+=amount;
+bill.due-=amount;
+
+bill.status=
+bill.due===0
+?"PAID"
+:"PARTIAL";
+
+saveData();
+
+renderDues();
+
+updateAll();
+
+alert("Payment updated successfully.");
+
+}
+
+
+/* =========================================================
+   SERVICES & RATES
+========================================================= */
+
+function renderServices(){
+
+const tbody=
+document.getElementById("serviceTable");
+
+
+tbody.innerHTML=
+services.map(
+(s,i)=>`
+
+<tr>
+
+<td>${i+1}</td>
+
+<td>${escapeHtml(s)}</td>
+
+<td>
+
+<input
+id="rate-${i}"
+type="number"
+min="0"
+value="${data.rates[s]||""}"
+style="width:120px;padding:7px;border:1px solid #ccd5e0;border-radius:6px">
+
+</td>
+
+<td>
+
+<button class="btn btn-primary"
+onclick="saveRate(${i})">
+Save
+</button>
+
+</td>
+
+</tr>
+
+`).join("");
+
+}
+
+
+function saveRate(i){
+
+const s=services[i];
+
+data.rates[s]=
+document.getElementById(
+"rate-"+i
+).value;
+
+saveData();
+
+document.getElementById(
+"serviceRate"
+).value=data.rates[s];
+
+alert("Rate saved.");
+
+}
+
+
+/* =========================================================
+   REPORTS
+========================================================= */
+
+function updateReports(){
+
+document.getElementById("reportToday")
+.textContent=money(getCollection("today"));
+
+document.getElementById("reportWeek")
+.textContent=money(getCollection("week"));
+
+document.getElementById("reportMonth")
+.textContent=money(getCollection("month"));
+
+document.getElementById("reportYear")
+.textContent=money(getCollection("year"));
+
+document.getElementById("reportLifetime")
+.textContent=money(getCollection("all"));
+
+document.getElementById("reportBills")
+.textContent=data.bills.length;
+
+document.getElementById("reportBillValue")
+.textContent=money(
+data.bills.reduce(
+(s,b)=>s+b.total,0
+)
+);
+
+document.getElementById("reportDue")
+.textContent=money(
+data.bills.reduce(
+(s,b)=>s+b.due,0
+)
+);
+
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function loadSettings(){
+
+document.getElementById("settingBusiness")
+.value=data.settings.business;
+
+document.getElementById("settingName")
+.value=data.settings.name;
+
+document.getElementById("settingWhatsapp")
+.value=data.settings.whatsapp;
+
+
+const img=
+document.getElementById("settingsQrPreview");
+
+
+if(data.settings.qr){
+
+img.src=data.settings.qr;
+img.style.display="block";
+
+}else{
+
+img.style.display="none";
+
+}
+
+}
+
+
+function saveSettings(){
+
+data.settings.business=
+document.getElementById("settingBusiness")
+.value.trim()||
+"GHAR BAITHKE DIGISEVA";
+
+data.settings.name=
+document.getElementById("settingName")
+.value.trim()||
+"Kumar";
+
+data.settings.whatsapp=
+document.getElementById("settingWhatsapp")
+.value.trim()||
+"7327933225";
+
+saveData();
+
+alert("Business details saved.");
+
+updateAll();
+
+}
+
+
+function uploadQR(event){
+
+const file=event.target.files[0];
+
+if(!file)return;
+
+if(file.size>2*1024*1024){
+
+alert(
+"Please use a QR image smaller than 2 MB."
+);
+
+return;
+
+}
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+data.settings.qr=e.target.result;
+
+saveData();
+
+loadSettings();
+
+alert(
+"Payment QR code saved successfully."
+);
+
+};
+
+reader.readAsDataURL(file);
+
+}
+
+
+function removeQR(){
+
+if(!data.settings.qr)return;
+
+if(!confirm(
+"Remove payment QR code?"
+))return;
+
+data.settings.qr="";
+
+saveData();
+
+loadSettings();
+
+}
+
+
+/* =========================================================
+   BACKUP / RESTORE
+========================================================= */
+
+function downloadBackup(){
+
+const blob=new Blob(
+[
+JSON.stringify(data,null,2)
+],
+{
+type:"application/json"
+}
+);
+
+const url=
+URL.createObjectURL(blob);
+
+const a=
+document.createElement("a");
+
+a.href=url;
+
+a.download=
+"GharBaithkeDigiseva_Backup_"+
+todayISO()+
+".json";
+
+a.click();
+
+URL.revokeObjectURL(url);
+
+}
+
+
+function restoreBackup(event){
+
+const file=event.target.files[0];
+
+if(!file)return;
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+
+try{
+
+const restored=
+JSON.parse(e.target.result);
+
+
+if(
+!restored.bills||
+!restored.tasks||
+!restored.rates
+){
+
+throw new Error();
+
+}
+
+
+if(
+!confirm(
+"Restore backup? Current data will be replaced."
+)
+)return;
+
+
+data=restored;
+
+data.settings=data.settings||{
+business:"GHAR BAITHKE DIGISEVA",
+name:"Kumar",
+whatsapp:"7327933225",
+qr:""
+};
+
+
+saveData();
+
+alert(
+"Backup restored successfully."
+);
+
+location.reload();
+
+}
+
+catch(err){
+
+alert(
+"Invalid backup file."
+);
+
+}
+
+};
+
+reader.readAsText(file);
+
+}
+
+
+function deleteAllData(){
+
+const answer=prompt(
+"All bills, tasks and data will be deleted.\n\nType DELETE to confirm."
+);
+
+if(answer==="DELETE"){
+
+localStorage.removeItem(KEY);
+
+location.reload();
+
+}
+
+}
+
+
+/* =========================================================
+   UPDATE EVERYTHING
+========================================================= */
+
+function updateAll(){
+
 updateDashboard();
 renderHistory();
 renderCustomers();
 renderDues();
-renderServices();
 updateReports();
+
+}
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+populateServiceDropdowns();
+
+clearBillForm();
+
+clearTaskForm();
+
+updateAll();
+
+renderServices();
+
+loadSettings();
 
 </script>
 
