@@ -220,6 +220,19 @@ font-weight:bold
 .btn-blue{background:#eaf2fb;color:#145c91}
 
 
+
+.customer-picker{position:relative;width:100%}
+.customer-picker-input{width:100%;border:1px solid #cfd7e2;border-radius:7px;padding:10px 11px;background:#fff;outline:none}
+.customer-picker-input:focus{border-color:#1769aa;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
+.customer-picker-menu{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #cfd7e2;border-radius:8px;box-shadow:0 12px 28px rgba(18,59,114,.16);max-height:280px;overflow:auto;z-index:520;display:none}
+.customer-picker-menu.show{display:block}
+.customer-option{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;cursor:pointer;border-bottom:1px solid #eef2f6}
+.customer-option:last-child{border-bottom:0}
+.customer-option:hover{background:#f2f7fc}
+.customer-option-name{font-weight:600;color:#24344d}
+.customer-option-mobile{font-size:12px;color:#687386}
+.customer-empty{padding:12px;color:#687386;font-size:12px;text-align:center}
+
 .service-picker{position:relative;width:100%}
 .service-picker-input{width:100%;border:1px solid #cfd7e2;border-radius:7px;padding:10px 11px;background:#fff;outline:none}
 .service-picker-input:focus{border-color:#1769aa;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
@@ -1019,7 +1032,10 @@ Customer se received har kaam ko track karo, pending se done tak.
 
 <div class="field">
 <label>Customer Name *</label>
-<input id="taskCustomer" placeholder="Customer name">
+<div class="customer-picker" id="taskCustomerPicker">
+<input id="taskCustomer" class="customer-picker-input" placeholder="Customer name" autocomplete="off">
+<div id="taskCustomerOptions" class="customer-picker-menu"></div>
+</div>
 </div>
 
 <div class="field">
@@ -1168,7 +1184,10 @@ Professional invoice generate karo.
 
 <div class="field">
 <label>Customer Name *</label>
-<input id="customerName" placeholder="Enter customer name">
+<div class="customer-picker" id="customerNamePicker">
+<input id="customerName" class="customer-picker-input" placeholder="Enter customer name" autocomplete="off">
+<div id="customerNameOptions" class="customer-picker-menu"></div>
+</div>
 </div>
 
 <div class="field">
@@ -1907,6 +1926,27 @@ deletedCustomers:[]
 
 data.customers=Array.isArray(data.customers)?data.customers:[];
 data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers:[];
+
+// Consolidate duplicate customer records by normalized name while preserving mobile values.
+{
+  const mergedCustomers=[];
+  const seen=new Map();
+  data.customers.forEach(c=>{
+    const name=String(c?.name||"").trim().replace(/\s+/g," ");
+    if(!name)return;
+    const key=customerSortKey(name);
+    if(!seen.has(key)){
+      const copy={...c,name,mobile:String(c?.mobile||"").trim()};
+      seen.set(key,copy);
+      mergedCustomers.push(copy);
+    }else{
+      const existing=seen.get(key);
+      if(!existing.mobile && c?.mobile)existing.mobile=String(c.mobile).trim();
+    }
+  });
+  data.customers=mergedCustomers;
+}
+
 data.extraServices=Array.isArray(data.extraServices)?data.extraServices:[];
 
 // Preserve the original built-in services and append user-added services.
@@ -2055,6 +2095,128 @@ String(count).padStart(2,"0");
 
 }
 
+
+/* =========================================================
+   CUSTOMER LOOKUP / AUTOCOMPLETE
+========================================================= */
+
+function customerSortKey(value){
+return String(value||"").trim().replace(/\s+/g," ").toLowerCase();
+}
+
+function getMergedCustomerList(){
+const map=new Map();
+
+function upsert(name,mobile,sourceDate){
+const cleanName=String(name||"").trim().replace(/\s+/g," ");
+if(!cleanName)return;
+const key=customerSortKey(cleanName);
+if(!map.has(key)){
+map.set(key,{name:cleanName,mobile:String(mobile||"").trim(),latestDate:sourceDate||""});
+}else{
+const item=map.get(key);
+if(!item.mobile && mobile)item.mobile=String(mobile).trim();
+if(sourceDate && (!item.latestDate || sourceDate>item.latestDate))item.latestDate=sourceDate;
+}
+}
+
+data.customers.forEach(c=>upsert(c.name,c.mobile,""));
+data.bills.forEach(b=>upsert(b.customerName,b.mobile,b.date));
+data.tasks.forEach(t=>upsert(t.customer,t.mobile,t.receivedDate));
+
+return [...map.values()].sort((a,b)=>{
+const d=(b.latestDate||"").localeCompare(a.latestDate||"");
+return d||a.name.localeCompare(b.name);
+});
+}
+
+function findCustomerByName(name){
+const key=customerSortKey(name);
+return getMergedCustomerList().find(c=>customerSortKey(c.name)===key)||null;
+}
+
+function upsertCustomer(name,mobile){
+const cleanName=String(name||"").trim().replace(/\s+/g," ");
+if(!cleanName)return null;
+const cleanMobile=String(mobile||"").trim();
+const key=customerSortKey(cleanName);
+let customer=data.customers.find(c=>customerSortKey(c.name)===key);
+if(customer){
+if(cleanMobile && !String(customer.mobile||"").trim()) customer.mobile=cleanMobile;
+customer.name=customer.name||cleanName;
+}else{
+customer={name:cleanName,mobile:cleanMobile};
+data.customers.push(customer);
+}
+data.deletedCustomers=data.deletedCustomers.filter(k=>k!==customerKey(cleanName,cleanMobile));
+return customer;
+}
+
+function renderCustomerOptions(inputId,menuId){
+const input=document.getElementById(inputId);
+const menu=document.getElementById(menuId);
+if(!input||!menu)return;
+const q=customerSortKey(input.value);
+const customers=getMergedCustomerList().filter(c=>!q||customerSortKey(c.name).includes(q));
+
+if(!customers.length){
+menu.innerHTML=q?'<div class="customer-empty">No customer found.</div>':'';
+menu.classList.toggle("show",!!q);
+return;
+}
+
+menu.innerHTML=customers.slice(0,30).map(c=>`
+<div class="customer-option" data-customer-name="${encodeURIComponent(c.name)}" data-customer-mobile="${encodeURIComponent(c.mobile||"")}">
+  <span class="customer-option-name">${escapeHtml(c.name)}</span>
+  <span class="customer-option-mobile">${escapeHtml(c.mobile||"No mobile")}</span>
+</div>`).join("");
+menu.querySelectorAll(".customer-option").forEach(el=>el.addEventListener("mousedown",e=>{
+ e.preventDefault();
+ const name=decodeURIComponent(el.dataset.customerName||"");
+ const mobile=decodeURIComponent(el.dataset.customerMobile||"");
+ input.value=name;
+ const mobileId=inputId==="customerName"?"customerMobile":"taskMobile";
+ const mobileInput=document.getElementById(mobileId);
+ if(mobileInput && mobile) mobileInput.value=mobile;
+ menu.classList.remove("show");
+}));
+menu.classList.add("show");
+}
+
+function setupCustomerPickers(){
+const pairs=[
+ ["customerName","customerNameOptions","customerNamePicker"],
+ ["taskCustomer","taskCustomerOptions","taskCustomerPicker"]
+];
+pairs.forEach(([inputId,menuId,pickerId])=>{
+ const input=document.getElementById(inputId);
+ const menu=document.getElementById(menuId);
+ const picker=document.getElementById(pickerId);
+ if(!input||!menu||!picker||input.dataset.customerPickerReady==="1")return;
+ input.dataset.customerPickerReady="1";
+ input.addEventListener("focus",()=>renderCustomerOptions(inputId,menuId));
+ input.addEventListener("input",()=>renderCustomerOptions(inputId,menuId));
+ input.addEventListener("keydown",e=>{
+  if(e.key==="Escape")menu.classList.remove("show");
+ });
+ document.addEventListener("click",e=>{
+  if(!picker.contains(e.target))menu.classList.remove("show");
+ });
+});
+}
+
+function autoFillCustomerMobile(inputId,mobileId){
+const input=document.getElementById(inputId);
+const mobile=document.getElementById(mobileId);
+if(!input||!mobile)return;
+const customer=findCustomerByName(input.value);
+if(customer && customer.mobile && !mobile.value.trim())mobile.value=customer.mobile;
+}
+
+document.addEventListener("blur",e=>{
+if(e.target?.id==="customerName")autoFillCustomerMobile("customerName","customerMobile");
+if(e.target?.id==="taskCustomer")autoFillCustomerMobile("taskCustomer","taskMobile");
+},true);
 
 /* =========================================================
    SERVICE DROPDOWNS
@@ -2429,23 +2591,8 @@ paymentMode:mode
 data.bills.push(bill);
 
 const existingKey=customerKey(name,mobile);
-
-let existingCustomer=data.customers.find(c=>
-customerKey(c.name,c.mobile)===existingKey
-);
-
-if(existingCustomer){
-existingCustomer.mobile=mobile||existingCustomer.mobile||"";
-existingCustomer.name=existingCustomer.name||name;
-}else{
-data.customers.push({
-name,
-mobile
-});
-}
-
-data.deletedCustomers=
-data.deletedCustomers.filter(k=>k!==existingKey);
+upsertCustomer(name,mobile);
+data.deletedCustomers=data.deletedCustomers.filter(k=>k!==existingKey);
 
 saveData();
 
@@ -2803,6 +2950,9 @@ notes
 
 data.tasks.push(task);
 
+// Every task customer is also registered as a customer.
+upsertCustomer(customer,mobile);
+
 saveData();
 
 clearTaskForm();
@@ -2851,7 +3001,13 @@ document.getElementById("taskPriorityFilter")
 ?.value||"ALL";
 
 
-let tasks=[...data.tasks].reverse();
+let tasks=[...data.tasks].sort((a,b)=>{
+const dateA=String(a.receivedDate||"");
+const dateB=String(b.receivedDate||"");
+const cmp=dateB.localeCompare(dateA);
+if(cmp!==0)return cmp;
+return Number(b.id||0)-Number(a.id||0);
+});
 
 
 tasks=tasks.filter(t=>{
@@ -3123,7 +3279,10 @@ const recent=
 data.tasks
 .filter(t=>t.status!=="DONE")
 .slice()
-.reverse()
+.sort((a,b)=>{
+ const cmp=String(b.receivedDate||"").localeCompare(String(a.receivedDate||""));
+ return cmp||Number(b.id||0)-Number(a.id||0);
+})
 .slice(0,8);
 
 
@@ -3284,7 +3443,13 @@ document.getElementById("historyFilter")
 ?.value||"ALL";
 
 
-let bills=[...data.bills].reverse();
+let bills=[...data.bills].sort((a,b)=>{
+const dateA=String(a.date||"");
+const dateB=String(b.date||"");
+const cmp=dateB.localeCompare(dateA);
+if(cmp!==0)return cmp;
+return Number(b.id||0)-Number(a.id||0);
+});
 
 
 bills=bills.filter(b=>{
@@ -3535,20 +3700,19 @@ document.getElementById("customerSearch")?.value||""
 
 const map={};
 
+function ensureCustomerAggregate(key,name,mobile){
+if(!map[key]){
+map[key]={name,mobile:mobile||"",bills:0,total:0,paid:0,due:0,tasks:0};
+}else if(!map[key].mobile && mobile){
+map[key].mobile=mobile;
+}
+}
+
 data.bills.forEach(b=>{
 const key=customerKey(b.customerName,b.mobile);
 if(data.deletedCustomers.includes(key))return;
 
-if(!map[key]){
-map[key]={
-name:b.customerName,
-mobile:b.mobile||"",
-bills:0,
-total:0,
-paid:0,
-due:0
-};
-}
+ensureCustomerAggregate(key,b.customerName,b.mobile);
 
 map[key].bills++;
 map[key].total+=Number(b.total)||0;
@@ -3562,16 +3726,14 @@ data.customers.forEach(c=>{
 const key=customerKey(c.name,c.mobile);
 if(data.deletedCustomers.includes(key))return;
 
-if(!map[key]){
-map[key]={
-name:c.name,
-mobile:c.mobile||"",
-bills:0,
-total:0,
-paid:0,
-due:0
-};
-}
+ensureCustomerAggregate(key,c.name,c.mobile);
+});
+
+data.tasks.forEach(t=>{
+const key=customerKey(t.customer,t.mobile);
+if(data.deletedCustomers.includes(key))return;
+ensureCustomerAggregate(key,t.customer,t.mobile);
+map[key].tasks++;
 });
 
 const customers=Object.values(map)
@@ -4287,6 +4449,7 @@ document.getElementById("authOverlay").style.display="flex";
 ========================================================= */
 
 populateServiceDropdowns();
+setupCustomerPickers();
 
 clearBillForm();
 
