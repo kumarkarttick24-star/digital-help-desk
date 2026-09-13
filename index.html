@@ -221,6 +221,11 @@ font-weight:bold
 
 
 
+
+.customer-investment-input{width:120px;padding:8px 9px;border:1px solid #cfd7e2;border-radius:7px;background:#fff;outline:none;font:inherit;color:#24344d}
+.customer-investment-input:focus{border-color:#1769aa;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
+.customer-profit{font-weight:800;color:#1769aa}
+.customer-profit.negative{color:#b42318}
 .customer-picker{position:relative;width:100%}
 .customer-picker-input{width:100%;border:1px solid #cfd7e2;border-radius:7px;padding:10px 11px;background:#fff;outline:none}
 .customer-picker-input:focus{border-color:#1769aa;box-shadow:0 0 0 3px rgba(23,105,170,.1)}
@@ -920,8 +925,8 @@ Digital Help Desk Billing & Work Management
 </div>
 
 <div class="card">
-<div class="label">Total Collection</div>
-<div class="value" id="totalCollection">₹0</div>
+<div class="label">Total Profit</div>
+<div class="value" id="totalProfit">₹0</div>
 </div>
 
 </div>
@@ -1169,9 +1174,9 @@ style="padding:10px;border:1px solid #ccd5e0;border-radius:7px">
 
 <section id="newbill" class="page">
 
-<h2 class="page-title">Create New Bill</h2>
+<h2 id="newBillTitle" class="page-title">Create New Bill</h2>
 
-<p class="page-subtitle">
+<p id="newBillSubtitle" class="page-subtitle">
 Professional invoice generate karo.
 </p>
 
@@ -1342,7 +1347,7 @@ readonly>
 
 <div class="actions">
 
-<button class="btn btn-green"
+<button id="saveBillButton" class="btn btn-green"
 onclick="saveBill()">
 ✓ Save & Generate Bill
 </button>
@@ -1387,6 +1392,8 @@ oninput="renderCustomers()">
 <th>Mobile</th>
 <th>Total Bills</th>
 <th>Total Work Value</th>
+<th>Govt Charges / Investment</th>
+<th>Net Profit</th>
 <th>Paid</th>
 <th>Due</th>
 <th>Action</th>
@@ -1935,13 +1942,15 @@ data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers
     const name=String(c?.name||"").trim().replace(/\s+/g," ");
     if(!name)return;
     const key=customerSortKey(name);
+    const investment=Number(c?.investment||0)||0;
     if(!seen.has(key)){
-      const copy={...c,name,mobile:String(c?.mobile||"").trim()};
+      const copy={...c,name,mobile:String(c?.mobile||"").trim(),investment};
       seen.set(key,copy);
       mergedCustomers.push(copy);
     }else{
       const existing=seen.get(key);
       if(!existing.mobile && c?.mobile)existing.mobile=String(c.mobile).trim();
+      if(!existing.investment && investment)existing.investment=investment;
     }
   });
   data.customers=mergedCustomers;
@@ -2144,8 +2153,9 @@ let customer=data.customers.find(c=>customerSortKey(c.name)===key);
 if(customer){
 if(cleanMobile && !String(customer.mobile||"").trim()) customer.mobile=cleanMobile;
 customer.name=customer.name||cleanName;
+customer.investment=Number(customer.investment||0)||0;
 }else{
-customer={name:cleanName,mobile:cleanMobile};
+customer={name:cleanName,mobile:cleanMobile,investment:0};
 data.customers.push(customer);
 }
 data.deletedCustomers=data.deletedCustomers.filter(k=>k!==customerKey(cleanName,cleanMobile));
@@ -2308,7 +2318,29 @@ renderTaskOptions();
    BILL FORM
 ========================================================= */
 
+let editingBillId=null;
+let editingBillOriginalCustomer=null;
+
+function setBillFormMode(isEdit){
+  const title=document.getElementById("newBillTitle");
+  const subtitle=document.getElementById("newBillSubtitle");
+  const btn=document.getElementById("saveBillButton");
+  if(isEdit){
+    if(title) title.textContent="Edit Bill";
+    if(subtitle) subtitle.textContent="Existing invoice ko edit karke update karo.";
+    if(btn) btn.innerHTML="✓ Update Bill";
+  }else{
+    if(title) title.textContent="Create New Bill";
+    if(subtitle) subtitle.textContent="Professional invoice generate karo.";
+    if(btn) btn.innerHTML="✓ Save & Generate Bill";
+  }
+}
+
 function clearBillForm(){
+
+editingBillId=null;
+editingBillOriginalCustomer=null;
+setBillFormMode(false);
 
 document.getElementById("customerName").value="";
 document.getElementById("customerMobile").value="";
@@ -2529,6 +2561,14 @@ return;
 
 }
 
+if(!date){
+
+alert("Please select a bill date.");
+
+return;
+
+}
+
 if(!currentBillItems.length){
 
 alert("Please add at least one service.");
@@ -2538,7 +2578,7 @@ return;
 }
 
 const total=currentBillItems.reduce(
-(s,i)=>s+i.amount,0
+(s,i)=>s+Number(i.amount||0),0
 );
 
 if(advance>total){
@@ -2558,7 +2598,75 @@ due===0
 ?"PARTIAL"
 :"DUE";
 
+/* ---------------------------------------------------------
+   EDIT EXISTING BILL
+--------------------------------------------------------- */
+if(editingBillId){
 
+const bill=data.bills.find(b=>String(b.id)===String(editingBillId));
+
+if(!bill){
+  alert("Unable to find the bill to edit.");
+  clearBillForm();
+  return;
+}
+
+const oldCustomer=editingBillOriginalCustomer||{
+  name:bill.customerName,
+  mobile:bill.mobile
+};
+
+bill.customerName=name;
+bill.mobile=mobile;
+bill.date=date;
+bill.items=JSON.parse(JSON.stringify(currentBillItems));
+bill.total=total;
+bill.paid=advance;
+bill.due=due;
+bill.status=status;
+bill.paymentMode=mode;
+
+const oldKey=customerKey(oldCustomer.name,oldCustomer.mobile);
+const newKey=customerKey(name,mobile);
+
+upsertCustomer(name,mobile);
+data.deletedCustomers=data.deletedCustomers.filter(k=>k!==newKey);
+
+/* Remove an old customer record only when no remaining bill/task uses it. */
+if(oldKey!==newKey){
+  const stillUsedByBill=data.bills.some(b=>
+    customerKey(b.customerName,b.mobile)===oldKey
+  );
+  const stillUsedByTask=data.tasks.some(t=>
+    customerKey(t.customer,t.mobile)===oldKey
+  );
+  if(!stillUsedByBill && !stillUsedByTask){
+    data.customers=data.customers.filter(c=>
+      customerKey(c.name,c.mobile)!==oldKey
+    );
+  }
+}
+
+saveData();
+
+editingBillId=null;
+editingBillOriginalCustomer=null;
+setBillFormMode(false);
+
+renderBillPreview(bill);
+document.getElementById("printArea").style.display="block";
+clearBillForm();
+updateAll();
+
+alert(`Bill No. ${bill.billNo} has been updated successfully.`);
+
+window.scrollTo({top:0,behavior:"smooth"});
+return;
+}
+
+/* ---------------------------------------------------------
+   CREATE NEW BILL
+--------------------------------------------------------- */
 const bill={
 
 id:Date.now().toString(),
@@ -2587,7 +2695,6 @@ paymentMode:mode
 
 };
 
-
 data.bills.push(bill);
 
 const existingKey=customerKey(name,mobile);
@@ -2611,6 +2718,52 @@ behavior:"smooth"
 });
 
 }
+
+/* =========================================================
+   OPEN BILL FOR EDITING
+========================================================= */
+function editBill(id){
+
+const bill=data.bills.find(b=>String(b.id)===String(id));
+
+if(!bill){
+  alert("Unable to find this bill.");
+  return;
+}
+
+editingBillId=String(bill.id);
+editingBillOriginalCustomer={
+  name:bill.customerName,
+  mobile:bill.mobile||""
+};
+
+showPageById("newbill");
+setBillFormMode(true);
+
+document.getElementById("customerName").value=bill.customerName||"";
+document.getElementById("customerMobile").value=bill.mobile||"";
+document.getElementById("billDate").value=bill.date||todayISO();
+/* Keep the existing bill number unchanged while editing. */
+document.getElementById("billNo").value=bill.billNo||"";
+document.getElementById("advancePaid").value=Number(bill.paid||0);
+document.getElementById("paymentMode").value=bill.paymentMode||"UPI";
+
+autoFillCustomerMobile("customerName","customerMobile");
+
+currentBillItems=JSON.parse(JSON.stringify(bill.items||[]));
+renderBillItems();
+
+document.getElementById("serviceSelect").value="";
+document.getElementById("serviceRate").value="";
+document.getElementById("serviceQty").value=1;
+
+updateBillTotals();
+
+document.getElementById("printArea").style.display="none";
+
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
 
 
 /* =========================================================
@@ -2746,6 +2899,7 @@ ${invoicePage2}
 <div class="invoice-actions no-print">
 <button class="btn btn-primary" onclick="printBill('${encodeURIComponent(bill.customerName)}','${bill.billNo}','${bill.id}')">🖨 Print / Save PDF</button>
 <button class="btn btn-green" onclick="shareBillWhatsApp('${bill.id}')">📲 WhatsApp</button>
+<button class="btn btn-light" onclick="editBill('${bill.id}')">✎ Edit Bill</button>
 <button class="btn btn-danger" onclick="deleteBill('${bill.id}')">Delete Bill</button>
 <button class="btn btn-light" onclick="document.getElementById('printArea').style.display='none'">Close</button>
 </div>
@@ -3227,8 +3381,8 @@ document.getElementById("monthCollection")
 document.getElementById("yearCollection")
 .textContent=money(getCollection("year"));
 
-document.getElementById("totalCollection")
-.textContent=money(getCollection("all"));
+document.getElementById("totalProfit")
+.textContent=money(getTotalProfit());
 
 
 const pending=data.tasks.filter(
@@ -3528,6 +3682,11 @@ onclick="viewBill('${b.id}')">
 View
 </button>
 
+<button class="btn btn-primary"
+onclick="editBill('${b.id}')">
+Edit
+</button>
+
 <button class="btn btn-danger"
 onclick="deleteBill('${b.id}')">
 Delete
@@ -3692,6 +3851,53 @@ alert(`Bill No. ${bill.billNo} has been deleted successfully.`);
 }
 
 
+function saveCustomerInvestment(name,value){
+
+const cleanName=String(name||"").trim().replace(/\s+/g," ");
+const key=customerSortKey(cleanName);
+const amount=Math.max(0,Number(value)||0);
+let customer=data.customers.find(c=>customerSortKey(c.name)===key);
+
+if(!customer){
+customer={name:cleanName,mobile:"",investment:amount};
+data.customers.push(customer);
+}else{
+customer.investment=amount;
+}
+
+saveData();
+renderCustomers();
+updateDashboard();
+}
+
+function getCustomerInvestment(name){
+const key=customerSortKey(name);
+const customer=data.customers.find(c=>customerSortKey(c.name)===key);
+return customer ? (Number(customer.investment)||0) : 0;
+}
+
+function getTotalProfit(){
+
+let totalWorkValue=0;
+
+data.bills.forEach(b=>{
+if(data.deletedCustomers.includes(customerKey(b.customerName,b.mobile)))return;
+totalWorkValue+=Number(b.total)||0;
+});
+
+const investmentMap=new Map();
+data.customers.forEach(c=>{
+const key=customerSortKey(c.name);
+if(data.deletedCustomers.includes(key))return;
+investmentMap.set(key,Number(c.investment)||0);
+});
+
+let totalInvestment=0;
+for(const amount of investmentMap.values()) totalInvestment+=amount;
+
+return totalWorkValue-totalInvestment;
+}
+
 function renderCustomers(){
 
 const q=(
@@ -3700,39 +3906,38 @@ document.getElementById("customerSearch")?.value||""
 
 const map={};
 
-function ensureCustomerAggregate(key,name,mobile){
+function ensureCustomerAggregate(key,name,mobile,investment){
 if(!map[key]){
-map[key]={name,mobile:mobile||"",bills:0,total:0,paid:0,due:0,tasks:0};
-}else if(!map[key].mobile && mobile){
-map[key].mobile=mobile;
+map[key]={name,mobile:mobile||"",bills:0,total:0,paid:0,due:0,tasks:0,investment:Number(investment)||0};
+}else{
+if(!map[key].mobile && mobile)map[key].mobile=mobile;
+if((!map[key].investment || map[key].investment===0) && Number(investment||0)>0){
+map[key].investment=Number(investment)||0;
 }
 }
-
-data.bills.forEach(b=>{
-const key=customerKey(b.customerName,b.mobile);
-if(data.deletedCustomers.includes(key))return;
-
-ensureCustomerAggregate(key,b.customerName,b.mobile);
-
-map[key].bills++;
-map[key].total+=Number(b.total)||0;
-map[key].paid+=Number(b.paid)||0;
-map[key].due+=Number(b.due)||0;
-
-if(!map[key].mobile && b.mobile)map[key].mobile=b.mobile;
-});
+}
 
 data.customers.forEach(c=>{
 const key=customerKey(c.name,c.mobile);
 if(data.deletedCustomers.includes(key))return;
+ensureCustomerAggregate(key,c.name,c.mobile,c.investment);
+});
 
-ensureCustomerAggregate(key,c.name,c.mobile);
+data.bills.forEach(b=>{
+const key=customerKey(b.customerName,b.mobile);
+if(data.deletedCustomers.includes(key))return;
+ensureCustomerAggregate(key,b.customerName,b.mobile,0);
+map[key].bills++;
+map[key].total+=Number(b.total)||0;
+map[key].paid+=Number(b.paid)||0;
+map[key].due+=Number(b.due)||0;
+if(!map[key].mobile && b.mobile)map[key].mobile=b.mobile;
 });
 
 data.tasks.forEach(t=>{
 const key=customerKey(t.customer,t.mobile);
 if(data.deletedCustomers.includes(key))return;
-ensureCustomerAggregate(key,t.customer,t.mobile);
+ensureCustomerAggregate(key,t.customer,t.mobile,0);
 map[key].tasks++;
 });
 
@@ -3747,16 +3952,31 @@ c.name.toLowerCase().includes(q)||
 const tbody=document.getElementById("customerTable");
 
 if(!customers.length){
-tbody.innerHTML=`<tr><td colspan="7" class="empty">No customers found.</td></tr>`;
+tbody.innerHTML=`<tr><td colspan="10" class="empty">No customers found.</td></tr>`;
 return;
 }
 
-tbody.innerHTML=customers.map(c=>`
+tbody.innerHTML=customers.map(c=>{
+const netProfit=Number(c.total||0)-Number(c.investment||0);
+const profitClass=netProfit<0?"customer-profit negative":"customer-profit";
+return `
 <tr>
 <td><strong>${escapeHtml(c.name)}</strong></td>
 <td>${escapeHtml(c.mobile||"-")}</td>
 <td>${c.bills}</td>
 <td>${money(c.total)}</td>
+<td>
+<input
+class="customer-investment-input"
+type="number"
+min="0"
+step="1"
+value="${Number(c.investment||0)}"
+title="Govt charges / investment for this customer"
+onchange="saveCustomerInvestment(decodeURIComponent('${encodeURIComponent(c.name)}'),this.value)"
+>
+</td>
+<td class="${profitClass}">${money(netProfit)}</td>
 <td>${money(c.paid)}</td>
 <td>${money(c.due)}</td>
 <td>
@@ -3766,7 +3986,8 @@ Delete
 </button>
 </td>
 </tr>
-`).join("");
+`;
+}).join("");
 }
 
 /* =========================================================
