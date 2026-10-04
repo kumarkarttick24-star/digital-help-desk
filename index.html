@@ -2115,6 +2115,11 @@ KEY,
 JSON.stringify(data)
 );
 
+/* Cloud sync runs automatically after login. */
+if(typeof cloudSyncSave==="function"){
+cloudSyncSave();
+}
+
 }
 
 
@@ -3269,24 +3274,7 @@ return Number(b.id||0)-Number(a.id||0);
 
 tasks=tasks.filter(t=>{
 const text=(t.customer+" "+t.mobile+" "+taskServiceText(t)+" "+t.notes).toLowerCase();
-
-let statusMatch=true;
-if(filter!=="ALL"){
- const services=Array.isArray(t.services)&&t.services.length
-   ? t.services
-   : [String(t.service||"")].filter(Boolean);
- const status=t.serviceStatus&&typeof t.serviceStatus==="object"?t.serviceStatus:{};
- const hasPending=services.some(s=>!status[s]);
- const hasDone=services.some(s=>!!status[s]);
-
- // A customer/task is visible in a status filter if at least one
- // individual service belongs to that status.
- if(filter==="PENDING") statusMatch=hasPending;
- else if(filter==="DONE") statusMatch=hasDone;
- else statusMatch=overallTaskStatus(t)===filter;
-}
-
-return (!q||text.includes(q)) && statusMatch && (pf==="ALL"||t.priority===pf);
+return (!q||text.includes(q)) && (filter==="ALL"||overallTaskStatus(t)===filter) && (pf==="ALL"||t.priority===pf);
 });
 
 const tbody=document.getElementById("taskTable");
@@ -3302,21 +3290,13 @@ tbody.innerHTML=tasks.map(t=>{
  servicesList.forEach(s=>{if(t.serviceStatus[s]===undefined)t.serviceStatus[s]=t.status==="DONE";});
  const doneCount=servicesList.filter(s=>!!t.serviceStatus[s]).length;
  const overall=overallTaskStatus(t);
-
- // In Pending/Done filters, show only the individual services
- // that match the selected filter. In All/In Progress, show all.
- let visibleServices=servicesList;
- if(filter==="PENDING") visibleServices=servicesList.filter(s=>!t.serviceStatus[s]);
- if(filter==="DONE") visibleServices=servicesList.filter(s=>!!t.serviceStatus[s]);
-
- const workHtml=`<div class="task-service-list">${visibleServices.map((service)=>{
-   const index=servicesList.indexOf(service);
+ const workHtml=`<div class="task-service-list">${servicesList.map((service,index)=>{
    const done=!!t.serviceStatus[service];
    return `<label class="task-service-item ${done?"done":"pending"}">
      <input type="checkbox" ${done?"checked":""} onchange="toggleTaskService('${t.id}',${index},this.checked)">
      <span>${escapeHtml(service)}</span>
    </label>`;
- }).join("")}</div><div class="task-service-progress">${doneCount}/${servicesList.length} completed${filter==="PENDING"?` • ${visibleServices.length} pending`:filter==="DONE"?` • ${visibleServices.length} done`:""}</div>`;
+ }).join("")}</div><div class="task-service-progress">${doneCount}/${servicesList.length} completed</div>`;
  return `
 <tr>
 <td><strong>${escapeHtml(t.customer)}</strong><br><small>${escapeHtml(t.mobile||"-")}</small></td>
@@ -4597,38 +4577,88 @@ updateReports();
 
 
 /* =========================================================
-   LOCAL ACCOUNT AUTHENTICATION
-   Real SMS OTP requires a backend/SMS provider.
+   CLOUD ACCOUNT AUTHENTICATION + CLOUD SYNC
 ========================================================= */
 
-const AUTH_KEY="digitalHelpDesk_accounts_v1";
-const SESSION_KEY="digitalHelpDesk_session_v1";
+const API_BASE="https://ivory-viper-153258.hostingersite.com/api";
+const API_KEY="DHD-2026-Cloud-7f9K2mP8xQ4vL6sN";
+const SESSION_KEY="digitalHelpDesk_cloud_session_v1";
+
 let pendingSignupOtp="";
 let pendingSignupMobile="";
-
-function getAccounts(){
-try{
-return JSON.parse(localStorage.getItem(AUTH_KEY)||"[]");
-}catch(e){return [];}
-}
-
-function saveAccounts(accounts){
-localStorage.setItem(AUTH_KEY,JSON.stringify(accounts));
-}
 
 function normalizeMobile(mobile){
 return String(mobile||"").replace(/\D/g,"").slice(-10);
 }
 
-async function hashPassword(password){
-const dataBytes=new TextEncoder().encode(password);
-const hash=await crypto.subtle.digest("SHA-256",dataBytes);
-return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,"0")).join("");
+function getCloudToken(){
+return localStorage.getItem(SESSION_KEY)||"";
+}
+
+function setCloudToken(token){
+if(token){
+localStorage.setItem(SESSION_KEY,token);
+}else{
+localStorage.removeItem(SESSION_KEY);
+}
+}
+
+function cloudHeaders(includeJson=false){
+const headers={
+"X-API-KEY":API_KEY
+};
+
+const token=getCloudToken();
+
+if(token){
+headers["X-SESSION-TOKEN"]=token;
+}
+
+if(includeJson){
+headers["Content-Type"]="application/json";
+}
+
+return headers;
+}
+
+async function apiRequest(path,options={}){
+const response=await fetch(
+API_BASE+path,
+{
+...options,
+headers:{
+...cloudHeaders(!!options.body),
+...(options.headers||{})
+}
+}
+);
+
+let result=null;
+
+try{
+result=await response.json();
+}catch(e){
+throw new Error("Invalid server response.");
+}
+
+if(!response.ok || result?.ok===false){
+throw new Error(
+result?.error||("Request failed ("+response.status+")")
+);
+}
+
+return result;
 }
 
 function authMessage(type,text){
-const el=document.getElementById(type==="error"?"authError":"authSuccess");
-const other=document.getElementById(type==="error"?"authSuccess":"authError");
+const el=document.getElementById(
+type==="error"?"authError":"authSuccess"
+);
+
+const other=document.getElementById(
+type==="error"?"authSuccess":"authError"
+);
+
 other.style.display="none";
 el.textContent=text;
 el.style.display="block";
@@ -4641,126 +4671,444 @@ document.getElementById("authSuccess").style.display="none";
 
 function showAuthForm(which){
 clearAuthMessages();
-document.getElementById("signInForm").classList.toggle("active",which==="signin");
-document.getElementById("signUpForm").classList.toggle("active",which==="signup");
-document.getElementById("signInTab").classList.toggle("active",which==="signin");
-document.getElementById("signUpTab").classList.toggle("active",which==="signup");
+
+document.getElementById("signInForm")
+.classList.toggle("active",which==="signin");
+
+document.getElementById("signUpForm")
+.classList.toggle("active",which==="signup");
+
+document.getElementById("signInTab")
+.classList.toggle("active",which==="signin");
+
+document.getElementById("signUpTab")
+.classList.toggle("active",which==="signup");
 }
 
+/*
+ * This remains a local verification step until a real SMS provider
+ * is connected. The actual account is created on Hostinger MySQL.
+ */
 function sendSignupOtp(){
-const mobile=normalizeMobile(document.getElementById("signupMobile").value);
+
+const mobile=normalizeMobile(
+document.getElementById("signupMobile").value
+);
+
 if(mobile.length!==10){
-authMessage("error","Please enter a valid 10-digit mobile number.");
+
+authMessage(
+"error",
+"Please enter a valid 10-digit mobile number."
+);
+
 return;
 }
+
 pendingSignupMobile=mobile;
-pendingSignupOtp=String(Math.floor(100000+Math.random()*900000));
+
+pendingSignupOtp=String(
+Math.floor(100000+Math.random()*900000)
+);
+
 const hint=document.getElementById("otpHint");
-hint.textContent="Static-site verification OTP for this browser: "+pendingSignupOtp;
+
+hint.textContent=
+"Verification OTP: "+pendingSignupOtp;
+
 hint.style.display="block";
-authMessage("success","OTP generated. Enter the verification code above.");
+
+authMessage(
+"success",
+"OTP generated. Enter the verification code."
+);
 }
 
+
 async function createAccount(event){
+
 event.preventDefault();
 clearAuthMessages();
 
-const name=document.getElementById("signupName").value.trim();
-const mobile=normalizeMobile(document.getElementById("signupMobile").value);
-const password=document.getElementById("signupPassword").value;
-const otp=document.getElementById("signupOtp").value.trim();
+const name=document
+.getElementById("signupName")
+.value.trim();
 
-if(!name||mobile.length!==10||password.length<6){
-authMessage("error","Please enter a valid name, 10-digit mobile number and password of at least 6 characters.");
+const mobile=normalizeMobile(
+document.getElementById("signupMobile").value
+);
+
+const password=document
+.getElementById("signupPassword")
+.value;
+
+const otp=document
+.getElementById("signupOtp")
+.value.trim();
+
+if(
+!name||
+mobile.length!==10||
+password.length<6
+){
+
+authMessage(
+"error",
+"Please enter a valid name, 10-digit mobile number and password of at least 6 characters."
+);
+
 return;
 }
 
-if(!pendingSignupOtp||pendingSignupMobile!==mobile){
-authMessage("error","Please click Send OTP for this mobile number first.");
+if(
+!pendingSignupOtp||
+pendingSignupMobile!==mobile
+){
+
+authMessage(
+"error",
+"Please click Send OTP for this mobile number first."
+);
+
 return;
 }
 
 if(otp!==pendingSignupOtp){
-authMessage("error","Invalid OTP.");
+
+authMessage(
+"error",
+"Invalid OTP."
+);
+
 return;
 }
 
-const accounts=getAccounts();
-if(accounts.some(a=>a.mobile===mobile)){
-authMessage("error","An account already exists for this mobile number. Please Sign In.");
-return;
-}
+try{
 
-const passwordHash=await hashPassword(password);
-accounts.push({
-id:Date.now().toString(),
+authMessage(
+"success",
+"Creating your account..."
+);
+
+const result=await apiRequest(
+"/auth.php",
+{
+method:"POST",
+body:JSON.stringify({
+action:"register",
 name,
 mobile,
-passwordHash,
-createdAt:new Date().toISOString()
-});
-saveAccounts(accounts);
+password
+})
+}
+);
 
-sessionStorage.setItem(SESSION_KEY,JSON.stringify({
-id:accounts[accounts.length-1].id,
-name,
-mobile
-}));
+if(!result.ok){
+throw new Error(
+result.error||"Registration failed."
+);
+}
+
+/*
+ * Login immediately after successful registration.
+ */
+const loginResult=await apiRequest(
+"/auth.php",
+{
+method:"POST",
+body:JSON.stringify({
+action:"login",
+mobile,
+password
+})
+}
+);
+
+setCloudToken(loginResult.token);
 
 pendingSignupOtp="";
 pendingSignupMobile="";
-document.getElementById("otpHint").style.display="none";
-document.getElementById("authOverlay").style.display="none";
-authMessage("success","Account created successfully.");
+
+document.getElementById("otpHint")
+.style.display="none";
+
+await loadCloudData(true);
+
+document.getElementById("authOverlay")
+.style.display="none";
+
+updateAll();
+
+authMessage(
+"success",
+"Account created successfully."
+);
+
+}catch(error){
+
+authMessage(
+"error",
+error.message||"Registration failed."
+);
+}
 }
 
+
 async function signIn(event){
+
 event.preventDefault();
 clearAuthMessages();
 
-const mobile=normalizeMobile(document.getElementById("loginMobile").value);
-const password=document.getElementById("loginPassword").value;
+const mobile=normalizeMobile(
+document.getElementById("loginMobile").value
+);
 
-const accounts=getAccounts();
-const account=accounts.find(a=>a.mobile===mobile);
+const password=document
+.getElementById("loginPassword")
+.value;
 
-if(!account){
-authMessage("error","No account found for this mobile number. Please Sign Up.");
+if(mobile.length!==10||!password){
+
+authMessage(
+"error",
+"Enter your mobile number and password."
+);
+
 return;
 }
 
-const passwordHash=await hashPassword(password);
-if(passwordHash!==account.passwordHash){
-authMessage("error","Incorrect mobile number or password.");
-return;
+try{
+
+authMessage(
+"success",
+"Signing in..."
+);
+
+const result=await apiRequest(
+"/auth.php",
+{
+method:"POST",
+body:JSON.stringify({
+action:"login",
+mobile,
+password
+})
 }
+);
 
-sessionStorage.setItem(SESSION_KEY,JSON.stringify({
-id:account.id,
-name:account.name,
-mobile:account.mobile
-}));
+setCloudToken(result.token);
 
-document.getElementById("authOverlay").style.display="none";
+await loadCloudData(false);
+
+document.getElementById("authOverlay")
+.style.display="none";
+
 updateAll();
+
+}catch(error){
+
+setCloudToken("");
+
+authMessage(
+"error",
+error.message||"Login failed."
+);
+}
 }
 
-function logout(){
-if(!confirm("Are you sure you want to logout?"))return;
-sessionStorage.removeItem(SESSION_KEY);
-document.getElementById("authOverlay").style.display="flex";
-showAuthForm("signin");
-document.getElementById("loginPassword").value="";
+
+async function cloudSyncSave(){
+
+const token=getCloudToken();
+
+if(!token)return;
+
+try{
+
+await apiRequest(
+"/sync.php",
+{
+method:"POST",
+body:JSON.stringify(data)
+}
+);
+
+}catch(error){
+
+console.warn(
+"Cloud save failed:",
+error.message
+);
+}
 }
 
-function initAuth(){
-const session=sessionStorage.getItem(SESSION_KEY);
-if(session){
-document.getElementById("authOverlay").style.display="none";
+
+async function loadCloudData(isNewAccount=false){
+
+const token=getCloudToken();
+
+if(!token){
+throw new Error("Session expired. Please sign in again.");
+}
+
+const result=await apiRequest(
+"/sync.php",
+{
+method:"GET"
+}
+);
+
+const cloudData=result.data;
+
+if(
+cloudData &&
+typeof cloudData==="object" &&
+(
+Array.isArray(cloudData.bills)||
+Array.isArray(cloudData.tasks)||
+Array.isArray(cloudData.customers)
+)
+){
+
+data=cloudData;
+
+data.bills=Array.isArray(data.bills)?data.bills:[];
+data.tasks=Array.isArray(data.tasks)?data.tasks:[];
+data.customers=Array.isArray(data.customers)?data.customers:[];
+data.deletedCustomers=
+Array.isArray(data.deletedCustomers)?
+data.deletedCustomers:[];
+
+data.rates=data.rates||{};
+data.settings=data.settings||{
+business:"DIGITAL HELP DESK",
+name:"KARTTICK CHANDRA PATRA",
+whatsapp:"7327933225",
+qr:""
+};
+
+data.extraServices=
+Array.isArray(data.extraServices)?
+data.extraServices:[];
+
+localStorage.setItem(
+KEY,
+JSON.stringify(data)
+);
+
+return;
+}
+
+/*
+ * First account setup:
+ * if this browser already has useful local data,
+ * upload it to the new cloud account.
+ */
+if(isNewAccount || !cloudData){
+
+const hasLocalData=
+data.bills.length||
+data.tasks.length||
+data.customers.length||
+Object.keys(data.rates||{}).length;
+
+if(hasLocalData){
+
+await cloudSyncSave();
+
 }else{
-document.getElementById("authOverlay").style.display="flex";
+
+await cloudSyncSave();
 }
 }
+}
+
+
+async function restoreCloudSession(){
+
+const token=getCloudToken();
+
+if(!token){
+
+document.getElementById("authOverlay")
+.style.display="flex";
+
+return;
+}
+
+try{
+
+await apiRequest(
+"/auth.php",
+{
+method:"POST",
+body:JSON.stringify({
+action:"me"
+})
+}
+);
+
+await loadCloudData(false);
+
+document.getElementById("authOverlay")
+.style.display="none";
+
+updateAll();
+
+}catch(error){
+
+setCloudToken("");
+
+document.getElementById("authOverlay")
+.style.display="flex";
+
+showAuthForm("signin");
+}
+}
+
+
+async function logout(){
+
+if(!confirm(
+"Are you sure you want to logout?"
+))return;
+
+try{
+
+if(getCloudToken()){
+
+await apiRequest(
+"/auth.php",
+{
+method:"POST",
+body:JSON.stringify({
+action:"logout"
+})
+}
+);
+
+}
+
+}catch(error){
+
+console.warn(
+"Logout request failed:",
+error.message
+);
+
+}
+
+setCloudToken("");
+
+document.getElementById("authOverlay")
+.style.display="flex";
+
+showAuthForm("signin");
+
+document.getElementById("loginPassword")
+.value="";
+}
+
 
 
 /* =========================================================
@@ -4782,7 +5130,7 @@ renderServices();
 
 loadSettings();
 
-initAuth();
+restoreCloudSession();
 
 </script>
 
