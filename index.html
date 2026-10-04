@@ -1195,6 +1195,31 @@ Professional invoice generate karo.
 </p>
 
 
+<div class="panel" id="workDraftPanel">
+
+<h3>Automatic Work Drafts</h3>
+
+<div class="notice">
+Work / Tasks section mein add kiye gaye pending billing works yahan automatically draft ke roop mein aayenge. Services & Rates mein saved default rate automatically use hoga. Jis service ka rate set nahi hai, woh blank rahega.
+</div>
+
+<div class="table-wrap" style="margin-top:16px">
+<table>
+<thead>
+<tr>
+<th>Customer</th>
+<th>Work / Service</th>
+<th>Known Amount</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="workDraftTable"></tbody>
+</table>
+</div>
+
+</div>
+
+
 <div class="panel">
 
 <h3>Customer Details</h3>
@@ -2062,6 +2087,7 @@ data.tasks.forEach(t=>{
   }else{
     list.forEach(name=>{if(t.serviceStatus[name]===undefined)t.serviceStatus[name]=t.status==="DONE";});
   }
+  if(!t.serviceBilled || typeof t.serviceBilled!=="object")t.serviceBilled={};
 });
 
 // Consolidate duplicate customer records by normalized name while preserving mobile values.
@@ -2186,6 +2212,7 @@ document.querySelectorAll(".nav-btn")
 if(btn)btn.classList.add("active");
 
 if(id==="dashboard")updateDashboard();
+if(id==="newbill")renderWorkDrafts();
 if(id==="tasks")renderTasks();
 if(id==="customers")renderCustomers();
 if(id==="history")renderHistory();
@@ -2217,6 +2244,139 @@ showPageById("newbill");
 
 clearBillForm();
 
+renderWorkDrafts();
+
+}
+
+
+/* =========================================================
+   AUTOMATIC WORK -> BILL DRAFTS
+========================================================= */
+
+function getWorkDrafts(){
+  const map=new Map();
+
+  data.tasks.forEach(task=>{
+    const customer=String(task.customer||"").trim().replace(/\s+/g," ");
+    if(!customer)return;
+
+    const key=customerKey(customer,task.mobile);
+    if(data.deletedCustomers.includes(key))return;
+
+    const servicesList=Array.isArray(task.services)&&task.services.length
+      ? task.services
+      : [String(task.service||"")].filter(Boolean);
+
+    if(!servicesList.length)return;
+
+    const billed=task.serviceBilled&&typeof task.serviceBilled==="object"
+      ? task.serviceBilled
+      : {};
+
+    if(!map.has(key)){
+      map.set(key,{
+        customerName:customer,
+        mobile:String(task.mobile||"").trim(),
+        latestDate:String(task.receivedDate||""),
+        items:[],
+        source:[]
+      });
+    }
+
+    const draft=map.get(key);
+    if(!draft.mobile && task.mobile)draft.mobile=String(task.mobile).trim();
+    if(String(task.receivedDate||"")>draft.latestDate)draft.latestDate=String(task.receivedDate||"");
+
+    servicesList.forEach(service=>{
+      const cleanService=String(service||"").trim();
+      if(!cleanService || billed[cleanService])return;
+
+      // One customer draft shows each service once. If the same service
+      // exists in multiple task records, keep the first unbilled source.
+      if(draft.items.some(item=>item.service===cleanService))return;
+
+      const rawRate=data.rates?.[cleanService];
+      const hasRate=rawRate!==undefined && rawRate!==null && String(rawRate).trim()!=="" && !isNaN(Number(rawRate));
+      const rate=hasRate?Number(rawRate):null;
+      const qty=1;
+
+      draft.items.push({
+        service:cleanService,
+        qty,
+        rate,
+        amount:rate===null?null:qty*rate
+      });
+
+      draft.source.push({taskId:String(task.id),service:cleanService});
+    });
+  });
+
+  return [...map.values()]
+    .filter(d=>d.items.length)
+    .sort((a,b)=>{
+      const dateCmp=String(b.latestDate||"").localeCompare(String(a.latestDate||""));
+      return dateCmp||a.customerName.localeCompare(b.customerName);
+    });
+}
+
+function renderWorkDrafts(){
+  const tbody=document.getElementById("workDraftTable");
+  if(!tbody)return;
+
+  const drafts=getWorkDrafts();
+
+  if(!drafts.length){
+    tbody.innerHTML=`<tr><td colspan="4" class="empty">No automatic work drafts available.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=drafts.map((draft,index)=>{
+    const knownTotal=draft.items.reduce((sum,item)=>sum+(item.rate===null?0:Number(item.amount||0)),0);
+    const hasBlank=draft.items.some(item=>item.rate===null);
+    const workHtml=draft.items.map(item=>`<div style="margin-bottom:5px">${escapeHtml(item.service)} ${item.rate===null?'<span style="color:#b45309;font-weight:600">(Rate blank)</span>':`<span style="color:#166534">(${money(item.rate)})</span>`}</div>`).join("");
+    return `<tr>
+      <td><strong>${escapeHtml(draft.customerName)}</strong><br><small>${escapeHtml(draft.mobile||"-")}</small></td>
+      <td>${workHtml}</td>
+      <td><strong>${money(knownTotal)}</strong>${hasBlank?'<br><small style="color:#b45309">Some rate(s) not set</small>':''}</td>
+      <td><button class="btn btn-primary" onclick="loadWorkDraft(${index})">Approve Draft</button></td>
+    </tr>`;
+  }).join("");
+
+  window._workDraftCache=drafts;
+}
+
+function loadWorkDraft(index){
+  const drafts=window._workDraftCache||getWorkDrafts();
+  const draft=drafts[index];
+  if(!draft)return;
+
+  editingBillId=null;
+  editingBillOriginalCustomer=null;
+  currentBillDraftSource=JSON.parse(JSON.stringify(draft.source||[]));
+  setBillFormMode(false);
+
+  document.getElementById("customerName").value=draft.customerName||"";
+  document.getElementById("customerMobile").value=draft.mobile||"";
+  document.getElementById("billDate").value=todayISO();
+  document.getElementById("billNo").value=generateBillNo(todayISO());
+  document.getElementById("advancePaid").value=0;
+  document.getElementById("paymentMode").value="UPI";
+
+  currentBillItems=(draft.items||[]).map(item=>({
+    service:item.service,
+    qty:Number(item.qty)||1,
+    rate:item.rate===null||item.rate===undefined||item.rate===""?null:Number(item.rate),
+    amount:item.rate===null||item.rate===undefined||item.rate===""?null:Number(item.amount||0)
+  }));
+
+  renderBillItems();
+  document.getElementById("serviceSelect").value="";
+  document.getElementById("serviceRate").value="";
+  document.getElementById("serviceQty").value=1;
+  updateBillTotals();
+  document.getElementById("printArea").style.display="none";
+
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 
@@ -2486,6 +2646,7 @@ document.getElementById("advancePaid").value=0;
 document.getElementById("paymentMode").value="UPI";
 
 currentBillItems=[];
+currentBillDraftSource=[];
 
 renderBillItems();
 
@@ -2520,6 +2681,7 @@ generateBillNo(date);
 ========================================================= */
 
 let currentBillItems=[];
+let currentBillDraftSource=[];
 
 
 function addServiceToBill(){
@@ -2606,9 +2768,9 @@ tbody.innerHTML=currentBillItems.map(
 
 <td>${item.qty}</td>
 
-<td>${money(item.rate)}</td>
+<td>${item.rate===null||item.rate===undefined||item.rate===""?"—":money(item.rate)}</td>
 
-<td>${money(item.amount)}</td>
+<td>${item.rate===null||item.rate===undefined||item.rate===""?"—":money(item.amount)}</td>
 
 <td class="no-print">
 
@@ -2787,6 +2949,8 @@ const mode=document.getElementById("paymentMode").value;
 if(!name){alert("Please enter customer name.");return;}
 if(!date){alert("Please select a bill date.");return;}
 if(!currentBillItems.length){alert("Please add at least one service.");return;}
+const blankRateItem=currentBillItems.find(i=>i.rate===null||i.rate===undefined||i.rate===""||isNaN(Number(i.rate)));
+if(blankRateItem){alert(`Please enter the rate for: ${blankRateItem.service}`);return;}
 const total=currentBillItems.reduce((s,i)=>s+Number(i.amount||0),0);
 if(directPaid>total){alert("Advance cannot be greater than total.");return;}
 
@@ -2822,6 +2986,20 @@ bill.paid=directPaid+Number(bill.advanceUsed||0);
 bill.due=Math.max(0,total-bill.paid);
 bill.status=bill.due===0?"PAID":bill.paid>0?"PARTIAL":"DUE";
 data.bills.push(bill);
+
+// If this bill came from an automatic Work / Task draft, mark only the
+// services actually included in the approved bill as billed.
+if(currentBillDraftSource.length){
+  const approvedServices=new Set(currentBillItems.map(i=>String(i.service||"")));
+  currentBillDraftSource.forEach(source=>{
+    if(!approvedServices.has(source.service))return;
+    const task=data.tasks.find(t=>String(t.id)===String(source.taskId));
+    if(!task)return;
+    if(!task.serviceBilled||typeof task.serviceBilled!=="object")task.serviceBilled={};
+    task.serviceBilled[source.service]=true;
+  });
+}
+
 upsertCustomer(name,mobile); data.deletedCustomers=data.deletedCustomers.filter(k=>k!==customerKey(name,mobile));
 saveData(); renderBillPreview(bill); document.getElementById("printArea").style.display="block"; clearBillForm(); updateAll(); window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -2839,6 +3017,7 @@ if(!bill){
 }
 
 editingBillId=String(bill.id);
+currentBillDraftSource=[];
 editingBillOriginalCustomer={
   name:bill.customerName,
   mobile:bill.mobile||""
@@ -3221,6 +3400,7 @@ upsertCustomer(customer,mobile);
 saveData();
 
 clearTaskForm();
+renderWorkDrafts();
 
 renderTasks();
 
@@ -3352,6 +3532,7 @@ function toggleTaskService(id,index,checked){
  }
  saveData();
  renderTasks();
+ renderWorkDrafts();
  updateDashboard();
 }
 
@@ -3380,6 +3561,7 @@ data.tasks.filter(t=>t.id!==id);
 saveData();
 
 renderTasks();
+renderWorkDrafts();
 
 updateDashboard();
 
@@ -4994,6 +5176,13 @@ data=cloudData;
 
 data.bills=Array.isArray(data.bills)?data.bills:[];
 data.tasks=Array.isArray(data.tasks)?data.tasks:[];
+data.tasks.forEach(t=>{
+  const list=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
+  t.services=list;
+  if(!t.serviceStatus || typeof t.serviceStatus!=="object")t.serviceStatus={};
+  list.forEach(name=>{if(t.serviceStatus[name]===undefined)t.serviceStatus[name]=t.status==="DONE";});
+  if(!t.serviceBilled || typeof t.serviceBilled!=="object")t.serviceBilled={};
+});
 data.customers=Array.isArray(data.customers)?data.customers:[];
 data.deletedCustomers=
 Array.isArray(data.deletedCustomers)?
@@ -5016,6 +5205,7 @@ KEY,
 JSON.stringify(data)
 );
 
+renderWorkDrafts();
 return;
 }
 
@@ -5139,6 +5329,7 @@ populateServiceDropdowns();
 setupCustomerPickers();
 
 clearBillForm();
+renderWorkDrafts();
 
 clearTaskForm();
 
