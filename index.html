@@ -250,17 +250,6 @@ font-weight:bold
 .service-option-name{flex:1}
 .service-selected{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .service-chip{display:inline-flex;align-items:center;gap:6px;background:#eaf2fb;color:#174b7e;border:1px solid #c9dcf4;border-radius:16px;padding:5px 9px;font-size:11px}
-.task-service-list{display:flex;flex-direction:column;gap:7px;min-width:260px}
-.task-service-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border:1px solid #dce5ef;border-radius:7px;background:#f8fbfe;cursor:pointer}
-.task-service-item.done{background:#eef9f2;border-color:#c9e8d2}
-.task-service-item input{width:16px;height:16px;accent-color:#1769aa;cursor:pointer;flex:0 0 auto}
-.task-service-item .task-service-name{font-size:12px;line-height:1.35;color:#24344d}
-.task-service-item.done .task-service-name{text-decoration:line-through;color:#13813d}
-.task-progress-note{font-size:10px;color:#687386;margin-top:5px}
-.advance-remaining{font-weight:800;color:#1769aa}
-.advance-used{color:#687386;font-size:12px}
-.advance-zero{color:#13813d;font-weight:700}
-
 .service-chip button{border:0;background:transparent;color:#174b7e;font-weight:bold;padding:0;line-height:1}
 .service-empty{padding:12px;color:#687386;font-size:12px;text-align:center}
 .invoice-page{width:210mm;min-height:297mm;box-sizing:border-box;padding:14mm 15mm;background:#fff;overflow:hidden}
@@ -268,6 +257,17 @@ font-weight:bold
 .invoice-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin:10px 0 0}
 
 .table-wrap{overflow:auto}
+
+.task-service-list{display:flex;flex-direction:column;gap:7px;min-width:300px}
+.task-service-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid #e1e7ef;border-radius:7px;background:#fafcff;font-size:12px}
+.task-service-item input{width:16px;height:16px;accent-color:#13813d;cursor:pointer;flex:0 0 auto}
+.task-service-item.done{background:#eef9f1;border-color:#bfe4c8;text-decoration:line-through;color:#13813d}
+.task-service-item.pending{background:#fff}
+.task-service-progress{font-size:11px;color:#5d6b7d;margin-top:6px}
+.advance-balance{font-weight:700;color:#145c91}
+.advance-positive{background:#eef7ff}
+.advance-zero{color:#687386}
+
 
 table{
 width:100%;
@@ -881,7 +881,7 @@ WhatsApp: 7327933225
 </button>
 
 <button class="nav-btn" onclick="showPage('advances',this)">
-💵 Customer Advances
+💳 Customer Advances
 </button>
 
 <button class="nav-btn" onclick="showPage('services',this)">
@@ -1324,7 +1324,6 @@ value="0"
 style="width:130px;padding:7px;border:1px solid #ccd5e0;border-radius:6px"
 oninput="updateBillTotals()">
 </div>
-<div id="customerAdvanceHint" style="font-size:11px;color:#1769aa;margin-top:-6px;margin-bottom:8px">No available customer advance for this customer.</div>
 
 <div class="total-row">
 <span>Balance Due</span>
@@ -1549,46 +1548,44 @@ Outstanding customer payments.
 
 <h2 class="page-title">Customer Advances</h2>
 
-<p class="page-subtitle">
-Advance received before work starts. Available advance will automatically be adjusted against future bills for the same customer.
-</p>
-
-<div class="card" style="max-width:380px;margin-bottom:20px">
-<div class="label">Total Available Customer Advance</div>
-<div class="value" id="advancePageTotal">₹0</div>
-</div>
+<p class="page-subtitle">Advance received before the work starts. Future bills will automatically use the available advance first.</p>
 
 <div class="panel">
+
 <h3>Add Customer Advance</h3>
 
 <div class="grid2">
 
 <div class="field">
 <label>Customer Name *</label>
-<input id="advanceCustomer" placeholder="Enter customer name" autocomplete="off">
+<div class="customer-picker" id="advanceCustomerPicker">
+<input id="advanceCustomer" class="customer-picker-input" placeholder="Search customer name" autocomplete="off">
+<div id="advanceCustomerOptions" class="customer-picker-menu"></div>
+</div>
 </div>
 
 <div class="field">
 <label>Mobile Number</label>
-<input id="advanceMobile" placeholder="Enter mobile number">
+<input id="advanceMobile" placeholder="Mobile number">
 </div>
 
 <div class="field">
-<label>Advance Amount ₹ *</label>
-<input id="advanceAmount" type="number" min="0" step="1" placeholder="Enter amount">
+<label>Advance Amount *</label>
+<input id="advanceAmount" type="number" min="1" step="1" placeholder="Enter amount">
 </div>
 
 <div class="field">
-<label>Date</label>
+<label>Date Received</label>
 <input id="advanceDate" type="date">
 </div>
 
 <div class="field">
 <label>Payment Mode</label>
-<select id="advanceMode">
-<option>UPI</option>
-<option>Cash</option>
-<option>Other</option>
+<select id="advancePaymentMode">
+<option value="UPI">UPI</option>
+<option value="Cash">Cash</option>
+<option value="Bank Transfer">Bank Transfer</option>
+<option value="Other">Other</option>
 </select>
 </div>
 
@@ -1596,28 +1593,36 @@ Advance received before work starts. Available advance will automatically be adj
 
 <div class="field" style="margin-top:16px">
 <label>Notes</label>
-<textarea id="advanceNotes" placeholder="Advance received before work / bill etc."></textarea>
+<textarea id="advanceNotes" placeholder="Optional notes"></textarea>
 </div>
 
 <div class="actions">
-<button class="btn btn-green" onclick="addCustomerAdvance()">＋ Add Advance</button>
+<button class="btn btn-primary" onclick="addCustomerAdvance()">＋ Add Advance</button>
 <button class="btn btn-light" onclick="clearAdvanceForm()">Clear</button>
 </div>
+
+</div>
+
+<div class="card" style="max-width:420px;margin-bottom:20px">
+<div class="label">Total Available Customer Advance</div>
+<div class="value" id="advancePageTotal">₹0</div>
 </div>
 
 <div class="panel">
-<h3>Advance History</h3>
-<div class="table-wrap">
+<h3>Advance Records</h3>
+<div class="actions" style="margin-top:0">
+<input class="search" id="advanceSearch" placeholder="Search customer or mobile..." oninput="renderAdvances()">
+</div>
+<div class="table-wrap" style="margin-top:18px">
 <table>
 <thead>
 <tr>
-<th>Date</th>
 <th>Customer</th>
-<th>Mobile</th>
-<th>Advance</th>
+<th>Date</th>
+<th>Received</th>
 <th>Used</th>
 <th>Remaining</th>
-<th>Mode</th>
+<th>Payment Mode</th>
 <th>Notes</th>
 <th>Action</th>
 </tr>
@@ -2039,6 +2044,27 @@ data.customers=Array.isArray(data.customers)?data.customers:[];
 data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers:[];
 data.customerAdvances=Array.isArray(data.customerAdvances)?data.customerAdvances:[];
 
+// Backward-compatible payment fields for existing bills.
+data.bills=Array.isArray(data.bills)?data.bills:[];
+data.bills.forEach(b=>{
+  if(b.directPaid===undefined)b.directPaid=Number(b.paid||0)||0;
+  if(b.advanceUsed===undefined)b.advanceUsed=0;
+  if(!Array.isArray(b.advanceAllocations))b.advanceAllocations=[];
+});
+
+// Backward-compatible per-service completion state for existing tasks.
+data.tasks=Array.isArray(data.tasks)?data.tasks:[];
+data.tasks.forEach(t=>{
+  const list=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
+  t.services=list;
+  if(!t.serviceStatus || typeof t.serviceStatus!=="object"){
+    t.serviceStatus={};
+    list.forEach(name=>t.serviceStatus[name]=t.status==="DONE");
+  }else{
+    list.forEach(name=>{if(t.serviceStatus[name]===undefined)t.serviceStatus[name]=t.status==="DONE";});
+  }
+});
+
 // Consolidate duplicate customer records by normalized name while preserving mobile values.
 {
   const mergedCustomers=[];
@@ -2060,8 +2086,6 @@ data.customerAdvances=Array.isArray(data.customerAdvances)?data.customerAdvances
   });
   data.customers=mergedCustomers;
 }
-
-normalizeCustomerAdvanceRecords();
 
 data.extraServices=Array.isArray(data.extraServices)?data.extraServices:[];
 
@@ -2304,7 +2328,8 @@ menu.classList.add("show");
 function setupCustomerPickers(){
 const pairs=[
  ["customerName","customerNameOptions","customerNamePicker"],
- ["taskCustomer","taskCustomerOptions","taskCustomerPicker"]
+ ["taskCustomer","taskCustomerOptions","taskCustomerPicker"],
+ ["advanceCustomer","advanceCustomerOptions","advanceCustomerPicker"]
 ];
 pairs.forEach(([inputId,menuId,pickerId])=>{
  const input=document.getElementById(inputId);
@@ -2334,10 +2359,8 @@ if(customer && customer.mobile && !mobile.value.trim())mobile.value=customer.mob
 document.addEventListener("blur",e=>{
 if(e.target?.id==="customerName")autoFillCustomerMobile("customerName","customerMobile");
 if(e.target?.id==="taskCustomer")autoFillCustomerMobile("taskCustomer","taskMobile");
+if(e.target?.id==="advanceCustomer")autoFillCustomerMobile("advanceCustomer","advanceMobile");
 },true);
-
-document.getElementById("customerName")?.addEventListener("input",()=>{updateCustomerAdvanceHint();updateBillTotals();});
-document.getElementById("customerMobile")?.addEventListener("input",()=>{updateCustomerAdvanceHint();updateBillTotals();});
 
 /* =========================================================
    SERVICE DROPDOWNS
@@ -2471,7 +2494,6 @@ const date=todayISO();
 document.getElementById("billDate").value=date;
 document.getElementById("billNo").value=
 generateBillNo(date);
-updateCustomerAdvanceHint();
 
 }
 
@@ -2604,143 +2626,200 @@ updateBillTotals();
 
 function updateBillTotals(){
 
-const total=currentBillItems.reduce((s,i)=>s+Number(i.amount||0),0);
-let manualAdvance=Number(document.getElementById("advancePaid").value)||0;
-if(manualAdvance>total){manualAdvance=total;document.getElementById("advancePaid").value=manualAdvance;}
-
-const available=getAvailableCustomerAdvance(
- document.getElementById("customerName")?.value||"",
- document.getElementById("customerMobile")?.value||"",
- editingBillId
+const total=currentBillItems.reduce(
+(s,i)=>s+i.amount,0
 );
-const customerAdvanceUsed=Math.min(Math.max(0,total-manualAdvance),available);
-const effectivePaid=Math.min(total,manualAdvance+customerAdvanceUsed);
-const due=Math.max(0,total-effectivePaid);
-let status="DUE";
-if(total>0&&due===0)status="PAID";
-else if(effectivePaid>0)status="PARTIAL";
 
-document.getElementById("billTotal").textContent=money(total);
-document.getElementById("billDue").textContent=money(due);
-document.getElementById("paymentStatus").value=status;
-updateCustomerAdvanceHint();
+let advance=Number(
+document.getElementById("advancePaid").value
+)||0;
+
+if(advance>total){
+
+advance=total;
+
+document.getElementById("advancePaid").value=advance;
+
 }
+
+const due=total-advance;
+
+let status="DUE";
+
+if(total>0&&due===0)
+status="PAID";
+else if(advance>0)
+status="PARTIAL";
+
+document.getElementById("billTotal")
+.textContent=money(total);
+
+document.getElementById("billDue")
+.textContent=money(due);
+
+document.getElementById("paymentStatus")
+.value=status;
+
+}
+
+
+/* =========================================================
+   CUSTOMER ADVANCES
+========================================================= */
+
+function advanceCustomerKey(name,mobile){
+return customerKey(name,mobile);
+}
+
+function getCustomerAdvanceRecords(name,mobile){
+const key=advanceCustomerKey(name,mobile);
+return data.customerAdvances.filter(a=>advanceCustomerKey(a.customerName,a.mobile)===key);
+}
+
+function getCustomerAdvanceBalance(name,mobile){
+return getCustomerAdvanceRecords(name,mobile).reduce((sum,a)=>sum+Math.max(0,Number(a.remaining||0)),0);
+}
+
+function restoreBillAdvanceAllocations(bill){
+if(!bill||!Array.isArray(bill.advanceAllocations))return;
+bill.advanceAllocations.forEach(a=>{
+const rec=data.customerAdvances.find(x=>String(x.id)===String(a.id));
+if(rec)rec.remaining=Math.max(0,Number(rec.remaining||0)+Number(a.amount||0));
+});
+bill.advanceAllocations=[];
+bill.advanceUsed=0;
+}
+
+function applyCustomerAdvanceToBill(bill,amountNeeded){
+let need=Math.max(0,Number(amountNeeded||0));
+bill.advanceAllocations=[];
+bill.advanceUsed=0;
+if(need<=0)return 0;
+const records=getCustomerAdvanceRecords(bill.customerName,bill.mobile)
+ .filter(a=>Number(a.remaining||0)>0)
+ .sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))||Number(a.id)-Number(b.id));
+for(const rec of records){
+ if(need<=0)break;
+ const use=Math.min(need,Number(rec.remaining||0));
+ rec.remaining-=use;
+ bill.advanceAllocations.push({id:rec.id,amount:use});
+ bill.advanceUsed+=use;
+ need-=use;
+}
+return bill.advanceUsed;
+}
+
+function clearAdvanceForm(){
+const ids=[["advanceCustomer",""],["advanceMobile",""],["advanceAmount",""] ,["advanceDate",todayISO()],["advancePaymentMode","UPI"],["advanceNotes",""]];
+ids.forEach(([id,value])=>{const el=document.getElementById(id);if(el)el.value=value;});
+}
+
+function addCustomerAdvance(){
+const name=document.getElementById("advanceCustomer").value.trim();
+const mobile=document.getElementById("advanceMobile").value.trim();
+const amount=Number(document.getElementById("advanceAmount").value)||0;
+const date=document.getElementById("advanceDate").value||todayISO();
+const paymentMode=document.getElementById("advancePaymentMode").value;
+const notes=document.getElementById("advanceNotes").value.trim();
+if(!name){alert("Please enter customer name.");return;}
+if(amount<=0){alert("Please enter a valid advance amount.");return;}
+upsertCustomer(name,mobile);
+data.customerAdvances.push({
+ id:Date.now().toString(),customerName:name,mobile,date,amount,remaining:amount,paymentMode,notes
+});
+saveData();
+clearAdvanceForm();
+renderAdvances();
+updateAll();
+alert("Customer advance added successfully.");
+}
+
+function deleteCustomerAdvance(id){
+const rec=data.customerAdvances.find(a=>String(a.id)===String(id));
+if(!rec)return;
+if(Number(rec.remaining||0)<=0){
+ alert("This advance has already been fully used and cannot be deleted.");
+ return;
+}
+if(!confirm(`Delete this advance of ${money(rec.remaining)} for ${rec.customerName}?`))return;
+data.customerAdvances=data.customerAdvances.filter(a=>String(a.id)!==String(id));
+saveData();
+renderAdvances();
+updateAll();
+}
+
+function renderAdvances(){
+const q=(document.getElementById("advanceSearch")?.value||"").toLowerCase().trim();
+const total=data.customerAdvances.reduce((s,a)=>s+Math.max(0,Number(a.remaining||0)),0);
+const totalEl=document.getElementById("advancePageTotal");
+if(totalEl)totalEl.textContent=money(total);
+const tbody=document.getElementById("advanceTable");
+if(!tbody)return;
+const rows=[...data.customerAdvances].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))||Number(b.id||0)-Number(a.id||0))
+.filter(a=>!q||String(a.customerName||"").toLowerCase().includes(q)||String(a.mobile||"").includes(q));
+if(!rows.length){tbody.innerHTML=`<tr><td colspan="8" class="empty">No advance records found.</td></tr>`;return;}
+tbody.innerHTML=rows.map(a=>{
+ const amount=Number(a.amount||0); const remaining=Math.max(0,Number(a.remaining||0)); const used=Math.max(0,amount-remaining);
+ return `<tr class="${remaining>0?"advance-positive":""}">
+ <td><strong>${escapeHtml(a.customerName)}</strong><br><small>${escapeHtml(a.mobile||"-")}</small></td>
+ <td>${displayDate(a.date)}</td><td>${money(amount)}</td><td>${money(used)}</td>
+ <td class="advance-balance">${money(remaining)}</td><td>${escapeHtml(a.paymentMode||"-")}</td><td>${escapeHtml(a.notes||"-")}</td>
+ <td>${remaining>0?`<button class="btn btn-danger" onclick="deleteCustomerAdvance('${a.id}')">Delete</button>`:`<span class="advance-zero">Used</span>`}</td>
+ </tr>`;
+}).join("");
+}
+
 
 /* =========================================================
    SAVE BILL
 ========================================================= */
 
 function saveBill(){
-
 const name=document.getElementById("customerName").value.trim();
 const mobile=document.getElementById("customerMobile").value.trim();
 const date=document.getElementById("billDate").value;
-const manualAdvance=Number(document.getElementById("advancePaid").value)||0;
+const directPaid=Number(document.getElementById("advancePaid").value)||0;
 const mode=document.getElementById("paymentMode").value;
-
 if(!name){alert("Please enter customer name.");return;}
 if(!date){alert("Please select a bill date.");return;}
 if(!currentBillItems.length){alert("Please add at least one service.");return;}
-
 const total=currentBillItems.reduce((s,i)=>s+Number(i.amount||0),0);
-if(manualAdvance>total){alert("Advance cannot be greater than total.");return;}
+if(directPaid>total){alert("Advance cannot be greater than total.");return;}
 
-/* Release previously used customer advance when editing so it can be recalculated safely. */
 if(editingBillId){
- const existing=data.bills.find(b=>String(b.id)===String(editingBillId));
- if(existing)releaseCustomerAdvance(existing);
+ const bill=data.bills.find(b=>String(b.id)===String(editingBillId));
+ if(!bill){alert("Unable to find the bill to edit.");clearBillForm();return;}
+ restoreBillAdvanceAllocations(bill);
+ const oldCustomer=editingBillOriginalCustomer||{name:bill.customerName,mobile:bill.mobile};
+ bill.customerName=name; bill.mobile=mobile; bill.date=date;
+ bill.items=JSON.parse(JSON.stringify(currentBillItems)); bill.total=total;
+ bill.directPaid=directPaid; bill.advanceUsed=0; bill.advanceAllocations=[];
+ applyCustomerAdvanceToBill(bill,Math.max(0,total-directPaid));
+ bill.paid=directPaid+Number(bill.advanceUsed||0);
+ bill.due=Math.max(0,total-bill.paid);
+ bill.status=bill.due===0?"PAID":bill.paid>0?"PARTIAL":"DUE";
+ bill.paymentMode=mode;
+ const oldKey=customerKey(oldCustomer.name,oldCustomer.mobile); const newKey=customerKey(name,mobile);
+ upsertCustomer(name,mobile); data.deletedCustomers=data.deletedCustomers.filter(k=>k!==newKey);
+ if(oldKey!==newKey){
+  const stillUsedByBill=data.bills.some(b=>customerKey(b.customerName,b.mobile)===oldKey);
+  const stillUsedByTask=data.tasks.some(t=>customerKey(t.customer,t.mobile)===oldKey);
+  const stillUsedByAdvance=data.customerAdvances.some(a=>customerKey(a.customerName,a.mobile)===oldKey);
+  if(!stillUsedByBill&&!stillUsedByTask&&!stillUsedByAdvance)data.customers=data.customers.filter(c=>customerKey(c.name,c.mobile)!==oldKey);
+ }
+ saveData(); editingBillId=null; editingBillOriginalCustomer=null; setBillFormMode(false);
+ renderBillPreview(bill); document.getElementById("printArea").style.display="block"; clearBillForm(); updateAll();
+ alert(`Bill No. ${bill.billNo} has been updated successfully.`); window.scrollTo({top:0,behavior:"smooth"}); return;
 }
 
-const customerAdvanceResult=applyCustomerAdvance(
- name,
- mobile,
- Math.max(0,total-manualAdvance)
-);
-const customerAdvanceUsed=customerAdvanceResult.used;
-const paid=Math.min(total,manualAdvance+customerAdvanceUsed);
-const due=Math.max(0,total-paid);
-const status=due===0?"PAID":paid>0?"PARTIAL":"DUE";
-
-/* ---------------------------------------------------------
-   EDIT EXISTING BILL
---------------------------------------------------------- */
-if(editingBillId){
-
-const bill=data.bills.find(b=>String(b.id)===String(editingBillId));
-if(!bill){
- alert("Unable to find the bill to edit.");
- clearBillForm();
- return;
-}
-
-const oldCustomer=editingBillOriginalCustomer||{name:bill.customerName,mobile:bill.mobile};
-bill.customerName=name;
-bill.mobile=mobile;
-bill.date=date;
-bill.items=JSON.parse(JSON.stringify(currentBillItems));
-bill.total=total;
-bill.manualAdvance=manualAdvance;
-bill.customerAdvanceUsed=customerAdvanceUsed;
-bill.customerAdvanceAllocations=customerAdvanceResult.allocations;
-bill.paid=paid;
-bill.due=due;
-bill.status=status;
-bill.paymentMode=mode;
-
-const oldKey=customerKey(oldCustomer.name,oldCustomer.mobile);
-const newKey=customerKey(name,mobile);
-upsertCustomer(name,mobile);
-data.deletedCustomers=data.deletedCustomers.filter(k=>k!==newKey);
-
-if(oldKey!==newKey){
- const stillUsedByBill=data.bills.some(b=>customerKey(b.customerName,b.mobile)===oldKey);
- const stillUsedByTask=data.tasks.some(t=>customerKey(t.customer,t.mobile)===oldKey);
- if(!stillUsedByBill&&!stillUsedByTask)data.customers=data.customers.filter(c=>customerKey(c.name,c.mobile)!==oldKey);
-}
-
-saveData();
-editingBillId=null;
-editingBillOriginalCustomer=null;
-setBillFormMode(false);
-renderBillPreview(bill);
-document.getElementById("printArea").style.display="block";
-clearBillForm();
-updateAll();
-alert(`Bill No. ${bill.billNo} has been updated successfully.`);
-window.scrollTo({top:0,behavior:"smooth"});
-return;
-}
-
-/* ---------------------------------------------------------
-   CREATE NEW BILL
---------------------------------------------------------- */
-const bill={
-id:Date.now().toString(),
-billNo:generateBillNo(date),
-date,
-customerName:name,
-mobile,
-items:JSON.parse(JSON.stringify(currentBillItems)),
-total,
-manualAdvance,
-customerAdvanceUsed,
-customerAdvanceAllocations:customerAdvanceResult.allocations,
-paid,
-due,
-status,
-paymentMode:mode
-};
-
+const bill={id:Date.now().toString(),billNo:generateBillNo(date),date,customerName:name,mobile,items:JSON.parse(JSON.stringify(currentBillItems)),total,directPaid,advanceUsed:0,advanceAllocations:[],paid:directPaid,due:Math.max(0,total-directPaid),status:directPaid===total?"PAID":directPaid>0?"PARTIAL":"DUE",paymentMode:mode};
+applyCustomerAdvanceToBill(bill,Math.max(0,total-directPaid));
+bill.paid=directPaid+Number(bill.advanceUsed||0);
+bill.due=Math.max(0,total-bill.paid);
+bill.status=bill.due===0?"PAID":bill.paid>0?"PARTIAL":"DUE";
 data.bills.push(bill);
-const existingKey=customerKey(name,mobile);
-upsertCustomer(name,mobile);
-data.deletedCustomers=data.deletedCustomers.filter(k=>k!==existingKey);
-saveData();
-renderBillPreview(bill);
-document.getElementById("printArea").style.display="block";
-clearBillForm();
-updateAll();
-window.scrollTo({top:0,behavior:"smooth"});
+upsertCustomer(name,mobile); data.deletedCustomers=data.deletedCustomers.filter(k=>k!==customerKey(name,mobile));
+saveData(); renderBillPreview(bill); document.getElementById("printArea").style.display="block"; clearBillForm(); updateAll(); window.scrollTo({top:0,behavior:"smooth"});
 }
 
 /* =========================================================
@@ -2769,7 +2848,7 @@ document.getElementById("customerMobile").value=bill.mobile||"";
 document.getElementById("billDate").value=bill.date||todayISO();
 /* Keep the existing bill number unchanged while editing. */
 document.getElementById("billNo").value=bill.billNo||"";
-document.getElementById("advancePaid").value=Number(bill.manualAdvance!==undefined?bill.manualAdvance:Math.max(0,Number(bill.paid||0)-Number(bill.customerAdvanceUsed||0)));
+document.getElementById("advancePaid").value=Number(bill.directPaid!==undefined?bill.directPaid:(Number(bill.paid||0)-Number(bill.advanceUsed||0)))||0;
 document.getElementById("paymentMode").value=bill.paymentMode||"UPI";
 
 autoFillCustomerMobile("customerName","customerMobile");
@@ -2890,7 +2969,6 @@ const invoicePage1=`
 <div class="total-box">
 <div class="total-row"><span>Total Amount</span><strong>${money(bill.total)}</strong></div>
 <div class="total-row"><span>Advance Paid</span><strong>${money(bill.paid)}</strong></div>
-${Number(bill.customerAdvanceUsed||0)>0?`<div class="total-row"><span>Customer Advance Used</span><strong>${money(bill.customerAdvanceUsed)}</strong></div>`:""}
 <div class="total-row balance-due-row"><span>Balance Due</span><strong>${money(bill.due)}</strong></div>
 <div class="total-row"><span>Payment Status</span><span class="status ${statusClass}">${bill.status}</span></div>
 </div>
@@ -3103,6 +3181,9 @@ return;
 }
 
 
+const serviceStatus={};
+selectedServices.forEach(s=>serviceStatus[s]=false);
+
 const task={
 
 id:Date.now().toString(),
@@ -3113,6 +3194,7 @@ mobile,
 
 service,
 services:selectedServices,
+serviceStatus,
 
 receivedDate:date||todayISO(),
 
@@ -3120,7 +3202,7 @@ completedDate:"",
 
 priority,
 
-status,
+status:selectedServices.length?"PENDING":status,
 
 notes
 
@@ -3163,87 +3245,19 @@ return"pending";
 }
 
 
-function normalizeTaskServiceStatus(task){
-const list=Array.isArray(task.services)&&task.services.length
-?task.services.map(s=>String(s||"").trim()).filter(Boolean)
-:String(task.service||"").split(",").map(s=>s.trim()).filter(Boolean);
-
-if(!Array.isArray(task.services)||!task.services.length)task.services=list;
-if(!task.service)task.service=list.join(", \ ");
-
-const legacy=!task.serviceStatus || typeof task.serviceStatus!=="object";
-if(legacy){
- task.serviceStatus={};
- list.forEach(s=>task.serviceStatus[s]=task.status==="DONE");
- task.serviceStatusReady=false;
-}
-
-list.forEach(s=>{
-if(task.serviceStatus[s]===undefined)task.serviceStatus[s]=false;
-});
-
-Object.keys(task.serviceStatus).forEach(s=>{
-if(!list.includes(s))delete task.serviceStatus[s];
-});
-
-return list;
-}
-
-function refreshTaskOverallStatus(task){
-const list=normalizeTaskServiceStatus(task);
-const doneCount=list.filter(s=>task.serviceStatus[s]===true).length;
-
-if(!task.serviceStatusReady){
- return {total:list.length,done:doneCount};
-}
-
-if(list.length&&doneCount===list.length){
- task.status="DONE";
- task.completedDate=task.completedDate||todayISO();
-}else if(doneCount>0){
- task.status="IN PROGRESS";
- task.completedDate="";
-}else{
- task.status="PENDING";
- task.completedDate="";
-}
-
-return {total:list.length,done:doneCount};
-}
-
-function toggleTaskService(taskId,encodedService,checked){
-const task=data.tasks.find(t=>String(t.id)===String(taskId));
-if(!task)return;
-const service=decodeURIComponent(encodedService);
-normalizeTaskServiceStatus(task);
-task.serviceStatusReady=true;
-task.serviceStatus[service]=!!checked;
-refreshTaskOverallStatus(task);
-saveData();
-renderTasks();
-updateDashboard();
-}
-
-window.toggleTaskService=toggleTaskService;
-
-function renderTaskServices(task){
-const list=normalizeTaskServiceStatus(task);
-const progress=refreshTaskOverallStatus(task);
-return `<div class="task-service-list">${list.map(s=>{
-const done=task.serviceStatus[s]===true;
-return `<label class="task-service-item ${done?"done":""}">
-<input type="checkbox" ${done?"checked":""} onchange="toggleTaskService('${task.id}','${encodeURIComponent(s)}',this.checked)">
-<span class="task-service-name">${escapeHtml(s)}</span>
-</label>`;
-}).join("")}</div>
-<div class="task-progress-note">${progress.done}/${progress.total} completed</div>`;
-}
-
 function renderTasks(){
 
 const q=(document.getElementById("taskSearch")?.value||"").toLowerCase();
 const filter=document.getElementById("taskFilter")?.value||"ALL";
 const pf=document.getElementById("taskPriorityFilter")?.value||"ALL";
+
+function overallTaskStatus(t){
+ const list=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
+ if(!list.length)return t.status||"PENDING";
+ const status=t.serviceStatus&&typeof t.serviceStatus==="object"?t.serviceStatus:{};
+ const done=list.filter(s=>!!status[s]).length;
+ return done===list.length?"DONE":done>0?"IN PROGRESS":"PENDING";
+}
 
 let tasks=[...data.tasks].sort((a,b)=>{
 const dateA=String(a.receivedDate||"");
@@ -3255,28 +3269,104 @@ return Number(b.id||0)-Number(a.id||0);
 
 tasks=tasks.filter(t=>{
 const text=(t.customer+" "+t.mobile+" "+taskServiceText(t)+" "+t.notes).toLowerCase();
-return (!q||text.includes(q))&&(filter==="ALL"||t.status===filter)&&(pf==="ALL"||t.priority===pf);
+
+let statusMatch=true;
+if(filter!=="ALL"){
+ const services=Array.isArray(t.services)&&t.services.length
+   ? t.services
+   : [String(t.service||"")].filter(Boolean);
+ const status=t.serviceStatus&&typeof t.serviceStatus==="object"?t.serviceStatus:{};
+ const hasPending=services.some(s=>!status[s]);
+ const hasDone=services.some(s=>!!status[s]);
+
+ // A customer/task is visible in a status filter if at least one
+ // individual service belongs to that status.
+ if(filter==="PENDING") statusMatch=hasPending;
+ else if(filter==="DONE") statusMatch=hasDone;
+ else statusMatch=overallTaskStatus(t)===filter;
+}
+
+return (!q||text.includes(q)) && statusMatch && (pf==="ALL"||t.priority===pf);
 });
 
 const tbody=document.getElementById("taskTable");
+
 if(!tasks.length){
  tbody.innerHTML=`<tr><td colspan="8" class="empty">No work found.</td></tr>`;
  return;
 }
 
-tasks.forEach(refreshTaskOverallStatus);
+tbody.innerHTML=tasks.map(t=>{
+ const servicesList=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
+ if(!t.serviceStatus || typeof t.serviceStatus!=="object")t.serviceStatus={};
+ servicesList.forEach(s=>{if(t.serviceStatus[s]===undefined)t.serviceStatus[s]=t.status==="DONE";});
+ const doneCount=servicesList.filter(s=>!!t.serviceStatus[s]).length;
+ const overall=overallTaskStatus(t);
 
-tbody.innerHTML=tasks.map(t=>`<tr>
+ // In Pending/Done filters, show only the individual services
+ // that match the selected filter. In All/In Progress, show all.
+ let visibleServices=servicesList;
+ if(filter==="PENDING") visibleServices=servicesList.filter(s=>!t.serviceStatus[s]);
+ if(filter==="DONE") visibleServices=servicesList.filter(s=>!!t.serviceStatus[s]);
+
+ const workHtml=`<div class="task-service-list">${visibleServices.map((service)=>{
+   const index=servicesList.indexOf(service);
+   const done=!!t.serviceStatus[service];
+   return `<label class="task-service-item ${done?"done":"pending"}">
+     <input type="checkbox" ${done?"checked":""} onchange="toggleTaskService('${t.id}',${index},this.checked)">
+     <span>${escapeHtml(service)}</span>
+   </label>`;
+ }).join("")}</div><div class="task-service-progress">${doneCount}/${servicesList.length} completed${filter==="PENDING"?` • ${visibleServices.length} pending`:filter==="DONE"?` • ${visibleServices.length} done`:""}</div>`;
+ return `
+<tr>
 <td><strong>${escapeHtml(t.customer)}</strong><br><small>${escapeHtml(t.mobile||"-")}</small></td>
-<td>${renderTaskServices(t)}</td>
+<td>${workHtml}</td>
 <td>${displayDate(t.receivedDate)}</td>
 <td>${t.completedDate?displayDate(t.completedDate):"-"}</td>
 <td class="${t.priority==="High"?"priority-high":"priority-normal"}">${t.priority==="High"?"⚡ HIGH":"Normal"}</td>
-<td><span class="status ${taskStatusClass(t.status)}">${t.status}</span></td>
+<td><span class="status ${taskStatusClass(overall)}">${overall}</span></td>
 <td>${escapeHtml(t.notes||"-")}</td>
 <td><button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></td>
-</tr>`).join("");
+</tr>`;
+}).join("");
 }
+
+function toggleTaskService(id,index,checked){
+ const task=data.tasks.find(t=>String(t.id)===String(id));
+ if(!task)return;
+ const servicesList=Array.isArray(task.services)&&task.services.length?task.services:[String(task.service||"")].filter(Boolean);
+ const service=servicesList[index];
+ if(!service)return;
+ if(!task.serviceStatus||typeof task.serviceStatus!=="object")task.serviceStatus={};
+ task.serviceStatus[service]=!!checked;
+ const doneCount=servicesList.filter(s=>!!task.serviceStatus[s]).length;
+ if(doneCount===servicesList.length&&servicesList.length){
+   task.status="DONE";
+   task.completedDate=todayISO();
+ }else if(doneCount>0){
+   task.status="IN PROGRESS";
+   task.completedDate="";
+ }else{
+   task.status="PENDING";
+   task.completedDate="";
+ }
+ saveData();
+ renderTasks();
+ updateDashboard();
+}
+
+function startTask(id){
+  const task=data.tasks.find(t=>String(t.id)===String(id));
+  if(!task)return;
+  const servicesList=Array.isArray(task.services)&&task.services.length?task.services:[String(task.service||"")].filter(Boolean);
+  if(servicesList.length){
+    task.serviceStatus=task.serviceStatus||{};
+    servicesList[0]=servicesList[0];
+  }
+  saveData();
+  renderTasks();
+}
+
 
 function deleteTask(id){
 
@@ -3446,70 +3536,23 @@ View
 ========================================================= */
 
 function getCollection(period){
-
 const now=new Date();
-
-return data.bills.reduce(
-(sum,bill)=>{
-
-if(!bill.paid)return sum;
-
-const d=
-new Date(bill.date+"T00:00:00");
-
-let include=false;
-
-
-if(period==="all")
-include=true;
-
-
-if(period==="today")
-include=bill.date===todayISO();
-
-
-if(period==="month")
-include=
-d.getMonth()===now.getMonth()&&
-d.getFullYear()===now.getFullYear();
-
-
-if(period==="year")
-include=
-d.getFullYear()===now.getFullYear();
-
-
-if(period==="week"){
-
-const start=new Date(now);
-
-const day=start.getDay();
-
-const diff=day===0?6:day-1;
-
-start.setDate(
-start.getDate()-diff
-);
-
-start.setHours(0,0,0,0);
-
-const end=new Date(start);
-
-end.setDate(
-end.getDate()+7
-);
-
-include=d>=start&&d<end;
-
+function inPeriod(dateStr){
+ const d=new Date(String(dateStr||"")+"T00:00:00");
+ if(period==="all")return true;
+ if(period==="today")return dateStr===todayISO();
+ if(period==="month")return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+ if(period==="year")return d.getFullYear()===now.getFullYear();
+ if(period==="week"){
+  const start=new Date(now); const day=start.getDay(); const diff=day===0?6:day-1; start.setDate(start.getDate()-diff); start.setHours(0,0,0,0);
+  const end=new Date(start); end.setDate(end.getDate()+7); return d>=start&&d<end;
+ }
+ return false;
 }
-
-
-return include
-?sum+Number(bill.paid)
-:sum;
-
-},0);
-
+let total=0;
+data.bills.forEach(b=>{const paid=Number(b.directPaid!==undefined?b.directPaid:(Number(b.paid||0)-Number(b.advanceUsed||0)))||0;if(paid&&inPeriod(b.date))total+=paid;});
+data.customerAdvances.forEach(a=>{const amount=Number(a.amount||0)||0;if(amount&&inPeriod(a.date))total+=amount;});
+return total;
 }
 
 
@@ -3720,12 +3763,12 @@ data.tasks=data.tasks.filter(t=>
 customerKey(t.customer,t.mobile)!==key
 );
 
-data.customers=data.customers.filter(c=>
-customerKey(c.name,c.mobile)!==key
-);
-
 data.customerAdvances=data.customerAdvances.filter(a=>
 customerKey(a.customerName,a.mobile)!==key
+);
+
+data.customers=data.customers.filter(c=>
+customerKey(c.name,c.mobile)!==key
 );
 
 data.deletedCustomers=data.deletedCustomers.filter(k=>k!==key);
@@ -3774,7 +3817,7 @@ closeDeleteBillModal();
 return;
 }
 
-releaseCustomerAdvance(bill);
+restoreBillAdvanceAllocations(bill);
 data.bills=data.bills.filter(b=>b.id!==id);
 
 saveData();
@@ -3926,166 +3969,6 @@ Delete
 </tr>
 `;
 }).join("");
-}
-
-/* =========================================================
-   CUSTOMER ADVANCES
-========================================================= */
-
-function normalizeCustomerAdvanceRecords(){
-if(!Array.isArray(data.customerAdvances))data.customerAdvances=[];
-data.customerAdvances.forEach(a=>{
- a.id=String(a.id||Date.now()+Math.random());
- a.customerName=String(a.customerName||"").trim().replace(/\s+/g," ");
- a.mobile=String(a.mobile||"").trim();
- a.amount=Math.max(0,Number(a.amount)||0);
- a.used=Math.max(0,Math.min(a.amount,Number(a.used)||0));
- a.date=a.date||todayISO();
- a.mode=a.mode||"UPI";
- a.notes=String(a.notes||"");
-});
-}
-
-function getAvailableCustomerAdvance(name,mobile="",excludeBillId=null){
-normalizeCustomerAdvanceRecords();
-const key=customerKey(name,mobile);
-let total=0;
-for(const a of data.customerAdvances){
- if(customerKey(a.customerName,a.mobile)!==key)continue;
- total+=Math.max(0,Number(a.amount||0)-Number(a.used||0));
-}
-
-if(excludeBillId){
- const bill=data.bills.find(b=>String(b.id)===String(excludeBillId));
- if(bill&&Array.isArray(bill.customerAdvanceAllocations)){
-  for(const alloc of bill.customerAdvanceAllocations){
-   total+=Math.max(0,Number(alloc.amount)||0);
-  }
- }
-}
-return total;
-}
-
-function applyCustomerAdvance(name,mobile,amount){
-normalizeCustomerAdvanceRecords();
-let remaining=Math.max(0,Number(amount)||0);
-const key=customerKey(name,mobile);
-const allocations=[];
-
-const records=data.customerAdvances
- .filter(a=>customerKey(a.customerName,a.mobile)===key && Number(a.amount||0)>Number(a.used||0))
- .sort((a,b)=>String(a.date||"").localeCompare(String(b.date||""))||String(a.id).localeCompare(String(b.id)));
-
-for(const a of records){
- if(remaining<=0)break;
- const available=Math.max(0,Number(a.amount||0)-Number(a.used||0));
- const take=Math.min(available,remaining);
- if(take<=0)continue;
- a.used=Number(a.used||0)+take;
- allocations.push({id:a.id,amount:take});
- remaining-=take;
-}
-
-return {used:Math.max(0,Number(amount||0)-remaining),allocations};
-}
-
-function releaseCustomerAdvance(bill){
-if(!bill||!Array.isArray(bill.customerAdvanceAllocations))return;
-normalizeCustomerAdvanceRecords();
-for(const alloc of bill.customerAdvanceAllocations){
- const a=data.customerAdvances.find(x=>String(x.id)===String(alloc.id));
- if(a)a.used=Math.max(0,Number(a.used||0)-Number(alloc.amount||0));
-}
-bill.customerAdvanceAllocations=[];
-bill.customerAdvanceUsed=0;
-}
-
-function clearAdvanceForm(){
-const ids=["advanceCustomer","advanceMobile","advanceAmount","advanceNotes"];
-ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
-const date=document.getElementById("advanceDate");
-if(date)date.value=todayISO();
-const mode=document.getElementById("advanceMode");
-if(mode)mode.value="UPI";
-}
-
-function addCustomerAdvance(){
-const name=String(document.getElementById("advanceCustomer")?.value||"").trim();
-const mobile=String(document.getElementById("advanceMobile")?.value||"").trim();
-const amount=Number(document.getElementById("advanceAmount")?.value||0);
-const date=document.getElementById("advanceDate")?.value||todayISO();
-const mode=document.getElementById("advanceMode")?.value||"UPI";
-const notes=String(document.getElementById("advanceNotes")?.value||"").trim();
-
-if(!name){alert("Please enter customer name.");return;}
-if(!amount||amount<=0){alert("Please enter a valid advance amount.");return;}
-
-upsertCustomer(name,mobile);
-if(!Array.isArray(data.customerAdvances))data.customerAdvances=[];
-data.customerAdvances.push({
- id:Date.now().toString(),
- customerName:name,
- mobile,
- amount,
- used:0,
- date,
- mode,
- notes
-});
-
-saveData();
-clearAdvanceForm();
-renderAdvances();
-renderCustomers();
-updateDashboard();
-alert("Customer advance added successfully.");
-}
-
-function deleteCustomerAdvance(id){
-const a=data.customerAdvances.find(x=>String(x.id)===String(id));
-if(!a)return;
-if(Number(a.used||0)>0){alert("This advance has already been used in a bill and cannot be deleted.");return;}
-if(!confirm(`Delete this ₹${Number(a.amount||0).toLocaleString("en-IN")} advance for ${a.customerName}?`))return;
-data.customerAdvances=data.customerAdvances.filter(x=>String(x.id)!==String(id));
-saveData();
-renderAdvances();
-renderCustomers();
-}
-
-function renderAdvances(){
-normalizeCustomerAdvanceRecords();
-const tbody=document.getElementById("advanceTable");
-if(!tbody)return;
-const totalAvailable=data.customerAdvances.reduce((sum,a)=>sum+Math.max(0,Number(a.amount||0)-Number(a.used||0)),0);
-const totalEl=document.getElementById("advancePageTotal");
-if(totalEl)totalEl.textContent=money(totalAvailable);
-
-const rows=[...data.customerAdvances].sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))||String(b.id).localeCompare(String(a.id)));
-if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" class="empty">No customer advances found.</td></tr>`;return;}
-
-tbody.innerHTML=rows.map(a=>{
- const remaining=Math.max(0,Number(a.amount||0)-Number(a.used||0));
- return `<tr>
- <td>${displayDate(a.date)}</td>
- <td><strong>${escapeHtml(a.customerName)}</strong></td>
- <td>${escapeHtml(a.mobile||"-")}</td>
- <td>${money(a.amount)}</td>
- <td class="advance-used">${money(a.used)}</td>
- <td class="${remaining>0?"advance-remaining":"advance-zero"}">${money(remaining)}</td>
- <td>${escapeHtml(a.mode||"-")}</td>
- <td>${escapeHtml(a.notes||"-")}</td>
- <td><button class="btn btn-danger" onclick="deleteCustomerAdvance('${a.id}')">Delete</button></td>
- </tr>`;
-}).join("");
-}
-
-function updateCustomerAdvanceHint(){
-const name=String(document.getElementById("customerName")?.value||"").trim();
-const mobile=String(document.getElementById("customerMobile")?.value||"").trim();
-const el=document.getElementById("customerAdvanceHint");
-if(!el)return;
-const amount=getAvailableCustomerAdvance(name,mobile,editingBillId);
-el.textContent=amount>0?`Available customer advance: ${money(amount)} — it will be adjusted automatically against this bill.`:"No available customer advance for this customer.";
 }
 
 /* =========================================================
@@ -4652,7 +4535,6 @@ qr:""
 
 data.customers=Array.isArray(data.customers)?data.customers:[];
 data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers:[];
-data.customerAdvances=Array.isArray(data.customerAdvances)?data.customerAdvances:[];
 
 
 saveData();
