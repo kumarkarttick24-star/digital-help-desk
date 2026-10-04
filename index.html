@@ -2061,12 +2061,14 @@ qr:""
 },
 customers:[],
 deletedCustomers:[],
-customerAdvances:[]
+customerAdvances:[],
+deletedWorkDrafts:[]
 };
 
 data.customers=Array.isArray(data.customers)?data.customers:[];
 data.deletedCustomers=Array.isArray(data.deletedCustomers)?data.deletedCustomers:[];
 data.customerAdvances=Array.isArray(data.customerAdvances)?data.customerAdvances:[];
+data.deletedWorkDrafts=Array.isArray(data.deletedWorkDrafts)?data.deletedWorkDrafts:[];
 
 // Backward-compatible payment fields for existing bills.
 data.bills=Array.isArray(data.bills)?data.bills:[];
@@ -2291,6 +2293,11 @@ function getWorkDrafts(){
       const cleanService=String(service||"").trim();
       if(!cleanService || billed[cleanService])return;
 
+      const sourceKey=String(task.id)+"||"+cleanService;
+      // A manually deleted draft is suppressed only for this exact task/service.
+      // If the same service is added later as a new task, it can appear again.
+      if(data.deletedWorkDrafts.includes(sourceKey))return;
+
       // One customer draft shows each service once. If the same service
       // exists in multiple task records, keep the first unbilled source.
       if(draft.items.some(item=>item.service===cleanService))return;
@@ -2383,8 +2390,11 @@ function renderWorkDrafts(){
     return `<tr>
       <td><strong>${escapeHtml(draft.customerName)}</strong><br><small>${escapeHtml(draft.mobile||"-")}</small></td>
       <td>${workHtml}</td>
-      <td><strong>${money(knownTotal)}</strong>${hasBlank?'<br><small style="color:#b45309">Some rate(s) not set</small>':'<br><small style="color:#166534">All rates set</small>'}</td>
-      <td><button class="btn btn-primary" onclick="loadWorkDraft(${index})">Approve Draft</button></td>
+      <td data-work-draft-total="${index}"><strong>${money(knownTotal)}</strong>${hasBlank?'<br><small style="color:#b45309">Some rate(s) not set</small>':'<br><small style="color:#166534">All rates set</small>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-primary" onclick="loadWorkDraft(${index})">Approve Draft</button>
+        <button class="btn btn-danger" style="margin-left:6px" onclick="deleteWorkDraft(${index})">Delete Draft</button>
+      </td>
     </tr>`;
   }).join("");
 
@@ -2408,8 +2418,9 @@ function updateWorkDraftRate(draftIndex,itemIndex,value){
     item.amount=Math.max(1,Number(item.qty)||1)*rate;
   }
 
-  // Refresh totals while preserving all manually edited Qty/Rate values.
-  renderWorkDrafts();
+  // Update only the total/status cell. Do NOT re-render the whole draft table
+  // while typing, otherwise the input loses focus after every character.
+  refreshWorkDraftTotalCell(draftIndex);
 }
 
 function updateWorkDraftQty(draftIndex,itemIndex,value){
@@ -2422,12 +2433,51 @@ function updateWorkDraftQty(draftIndex,itemIndex,value){
   item.qty=qty;
   item.amount=item.rate===null||item.rate===undefined||item.rate===""?null:qty*Number(item.rate);
 
-  // Refresh totals while preserving all manually edited Qty/Rate values.
-  renderWorkDrafts();
+  // Update only the total/status cell. Do NOT re-render the whole draft table
+  // while typing, otherwise the input loses focus after every character.
+  refreshWorkDraftTotalCell(draftIndex);
+}
+
+function refreshWorkDraftTotalCell(draftIndex){
+  const drafts=window._workDraftCache||[];
+  const draft=drafts[draftIndex];
+  if(!draft||!draft.items)return;
+
+  const total=draft.items.reduce((sum,item)=>{
+    const rate=item.rate===null||item.rate===undefined||item.rate===""?null:Number(item.rate);
+    const qty=Math.max(1,Number(item.qty)||1);
+    return sum+(rate===null||isNaN(rate)?0:qty*rate);
+  },0);
+  const hasBlank=draft.items.some(item=>item.rate===null||item.rate===undefined||item.rate==="");
+  const cell=document.querySelector(`[data-work-draft-total="${draftIndex}"]`);
+  if(!cell)return;
+  cell.innerHTML=`<strong>${money(total)}</strong>${hasBlank?'<br><small style="color:#b45309">Some rate(s) not set</small>':'<br><small style="color:#166534">All rates set</small>'}`;
 }
 
 window.updateWorkDraftRate=updateWorkDraftRate;
 window.updateWorkDraftQty=updateWorkDraftQty;
+
+function deleteWorkDraft(index){
+  const drafts=window._workDraftCache||[];
+  const draft=drafts[index];
+  if(!draft)return;
+
+  const label=draft.customerName||"this customer";
+  if(!confirm(`Delete this draft bill for ${label}?\n\nThe Work / Task will NOT be deleted. You can create a new draft later if a new billing work is added.`))return;
+
+  const existing=new Set(Array.isArray(data.deletedWorkDrafts)?data.deletedWorkDrafts:[]);
+  (draft.source||[]).forEach(source=>{
+    if(source && source.taskId!==undefined && source.service){
+      existing.add(String(source.taskId)+"||"+String(source.service));
+    }
+  });
+  data.deletedWorkDrafts=[...existing];
+  saveData();
+  renderWorkDrafts();
+  alert("Draft bill deleted successfully. The Work / Task is still safe.");
+}
+
+window.deleteWorkDraft=deleteWorkDraft;
 
 function loadWorkDraft(index){
   const drafts=window._workDraftCache||getWorkDrafts();
