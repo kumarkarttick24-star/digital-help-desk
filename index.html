@@ -1137,7 +1137,6 @@ style="padding:10px;border:1px solid #ccd5e0;border-radius:7px">
 
 <option value="ALL">All Status</option>
 <option value="PENDING">Pending</option>
-<option value="IN PROGRESS">In Progress</option>
 <option value="DONE">Done</option>
 
 </select>
@@ -3274,7 +3273,21 @@ return Number(b.id||0)-Number(a.id||0);
 
 tasks=tasks.filter(t=>{
 const text=(t.customer+" "+t.mobile+" "+taskServiceText(t)+" "+t.notes).toLowerCase();
-return (!q||text.includes(q)) && (filter==="ALL"||overallTaskStatus(t)===filter) && (pf==="ALL"||t.priority===pf);
+
+let statusMatch=true;
+if(filter!=="ALL"){
+ const services=Array.isArray(t.services)&&t.services.length
+   ? t.services
+   : [String(t.service||"")].filter(Boolean);
+ const status=t.serviceStatus&&typeof t.serviceStatus==="object"?t.serviceStatus:{};
+
+ // Pending/Done filtering is based on each individual work/service.
+ // A mixed task is shown if at least one service matches the selected filter.
+ if(filter==="PENDING") statusMatch=services.some(s=>!status[s]);
+ else if(filter==="DONE") statusMatch=services.some(s=>!!status[s]);
+}
+
+return (!q||text.includes(q)) && statusMatch && (pf==="ALL"||t.priority===pf);
 });
 
 const tbody=document.getElementById("taskTable");
@@ -3290,13 +3303,20 @@ tbody.innerHTML=tasks.map(t=>{
  servicesList.forEach(s=>{if(t.serviceStatus[s]===undefined)t.serviceStatus[s]=t.status==="DONE";});
  const doneCount=servicesList.filter(s=>!!t.serviceStatus[s]).length;
  const overall=overallTaskStatus(t);
- const workHtml=`<div class="task-service-list">${servicesList.map((service,index)=>{
+ let visibleServices=servicesList;
+ if(filter==="PENDING") visibleServices=servicesList.filter(service=>!t.serviceStatus[service]);
+ if(filter==="DONE") visibleServices=servicesList.filter(service=>!!t.serviceStatus[service]);
+
+ const workHtml=`<div class="task-service-list">${visibleServices.map((service)=>{
+   const index=servicesList.indexOf(service);
    const done=!!t.serviceStatus[service];
    return `<label class="task-service-item ${done?"done":"pending"}">
      <input type="checkbox" ${done?"checked":""} onchange="toggleTaskService('${t.id}',${index},this.checked)">
      <span>${escapeHtml(service)}</span>
    </label>`;
- }).join("")}</div><div class="task-service-progress">${doneCount}/${servicesList.length} completed</div>`;
+ }).join("")}</div><div class="task-service-progress">${visibleServices.filter(service=>!!t.serviceStatus[service]).length}/${visibleServices.length} completed</div>`;
+
+ const displayStatus=filter==="PENDING"?"PENDING":filter==="DONE"?"DONE":overall;
  return `
 <tr>
 <td><strong>${escapeHtml(t.customer)}</strong><br><small>${escapeHtml(t.mobile||"-")}</small></td>
@@ -3304,7 +3324,7 @@ tbody.innerHTML=tasks.map(t=>{
 <td>${displayDate(t.receivedDate)}</td>
 <td>${t.completedDate?displayDate(t.completedDate):"-"}</td>
 <td class="${t.priority==="High"?"priority-high":"priority-normal"}">${t.priority==="High"?"⚡ HIGH":"Normal"}</td>
-<td><span class="status ${taskStatusClass(overall)}">${overall}</span></td>
+<td><span class="status ${taskStatusClass(displayStatus)}">${displayStatus}</span></td>
 <td>${escapeHtml(t.notes||"-")}</td>
 <td><button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></td>
 </tr>`;
