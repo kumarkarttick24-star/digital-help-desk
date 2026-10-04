@@ -4117,7 +4117,41 @@ function renderServices(){
 const tbody=document.getElementById("serviceTable");
 if(!tbody)return;
 
-tbody.innerHTML=services.map((s,i)=>`
+// If a service is currently being edited, keep its row in edit mode while
+// re-rendering the table so the user can safely update the name and rate.
+const editIndex=(typeof editingServiceIndex==="number")?editingServiceIndex:-1;
+
+tbody.innerHTML=services.map((s,i)=>{
+const isEditing=i===editIndex;
+
+if(isEditing){
+return `
+<tr>
+<td>${i+1}</td>
+<td>
+<input
+id="service-name-${i}"
+type="text"
+maxlength="120"
+value="${escapeHtml(s)}"
+style="width:100%;min-width:260px;padding:8px;border:1px solid #ccd5e0;border-radius:6px">
+</td>
+<td>
+<input
+id="rate-${i}"
+type="number"
+min="0"
+value="${data.rates[s]||""}"
+style="width:120px;padding:7px;border:1px solid #ccd5e0;border-radius:6px">
+</td>
+<td>
+<button class="btn btn-green" onclick="updateService(${i})">Update</button>
+<button class="btn btn-light" onclick="cancelServiceEdit()" style="margin-left:6px">Cancel</button>
+</td>
+</tr>`;
+}
+
+return `
 <tr>
 <td>${i+1}</td>
 <td>${escapeHtml(s)}</td>
@@ -4131,10 +4165,93 @@ style="width:120px;padding:7px;border:1px solid #ccd5e0;border-radius:6px">
 </td>
 <td>
 <button class="btn btn-primary" onclick="saveRate(${i})">Save</button>
+<button class="btn btn-light" onclick="editService(${i})" style="margin-left:6px">Edit</button>
 </td>
-</tr>
-`).join("");
+</tr>`;
+}).join("");
 
+}
+
+// Index of the service currently being edited. -1 means no edit is active.
+let editingServiceIndex=-1;
+
+function editService(i){
+if(i<0 || i>=services.length)return;
+editingServiceIndex=i;
+renderServices();
+
+const input=document.getElementById("service-name-"+i);
+if(input){
+input.focus();
+input.select();
+}
+}
+
+function cancelServiceEdit(){
+editingServiceIndex=-1;
+renderServices();
+}
+
+function updateService(i){
+if(i<0 || i>=services.length)return;
+
+const oldName=services[i];
+const nameInput=document.getElementById("service-name-"+i);
+const rateInput=document.getElementById("rate-"+i);
+
+const newName=String(nameInput?.value||"").trim().replace(/\s+/g," ");
+const newRate=String(rateInput?.value||"").trim();
+
+if(!newName){
+alert("Please enter a service name.");
+nameInput?.focus();
+return;
+}
+
+const duplicate=services.some((service,index)=>
+index!==i && String(service).trim().toLowerCase()===newName.toLowerCase()
+);
+
+if(duplicate){
+alert("This service name already exists.");
+nameInput?.focus();
+return;
+}
+
+// Keep old bills/history untouched. Only the current service master list,
+// its default rate, and user-added service registry are updated.
+const oldRate=data.rates[oldName];
+
+delete data.rates[oldName];
+data.rates[newName]=newRate!==""?newRate:(oldRate??"");
+
+services[i]=newName;
+
+if(Array.isArray(data.extraServices)){
+const extraIndex=data.extraServices.findIndex(s=>
+String(s||"").trim().toLowerCase()===String(oldName).trim().toLowerCase()
+);
+if(extraIndex>=0)data.extraServices[extraIndex]=newName;
+}
+
+// Keep the service list alphabetically ordered.
+services=[...new Set(services)].sort((a,b)=>
+ a.localeCompare(b,undefined,{sensitivity:"base",numeric:true})
+);
+
+saveData();
+editingServiceIndex=-1;
+renderServices();
+populateServiceDropdowns();
+
+// If the renamed service is currently selected in the bill form, update its rate.
+const selectedService=document.getElementById("serviceSelect");
+if(selectedService && selectedService.value===oldName){
+selectedService.value=newName;
+document.getElementById("serviceRate").value=data.rates[newName]||"";
+}
+
+alert("Service updated successfully.");
 }
 
 function addService(){
@@ -4194,9 +4311,8 @@ document.getElementById(
 
 saveData();
 
-document.getElementById(
-"serviceRate"
-).value=data.rates[s];
+const serviceRate=document.getElementById("serviceRate");
+if(serviceRate)serviceRate.value=data.rates[s];
 
 alert("Rate saved.");
 
