@@ -2331,19 +2331,58 @@ function renderWorkDrafts(){
   }
 
   tbody.innerHTML=drafts.map((draft,index)=>{
-    const knownTotal=draft.items.reduce((sum,item)=>sum+(item.rate===null?0:Number(item.amount||0)),0);
-    const hasBlank=draft.items.some(item=>item.rate===null);
-    const workHtml=draft.items.map(item=>`<div style="margin-bottom:5px">${escapeHtml(item.service)} ${item.rate===null?'<span style="color:#b45309;font-weight:600">(Rate blank)</span>':`<span style="color:#166534">(${money(item.rate)})</span>`}</div>`).join("");
+    const knownTotal=draft.items.reduce((sum,item)=>{
+      const rate=item.rate===null||item.rate===undefined||item.rate===""?null:Number(item.rate);
+      return sum+(rate===null||isNaN(rate)?0:Number(item.qty||1)*rate);
+    },0);
+    const hasBlank=draft.items.some(item=>item.rate===null||item.rate===undefined||item.rate==="");
+    const workHtml=draft.items.map((item,itemIndex)=>{
+      const rateValue=item.rate===null||item.rate===undefined||item.rate===""?"":Number(item.rate);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px;padding:7px 0;border-bottom:1px dashed #e1e7ef">
+        <span style="flex:1">${escapeHtml(item.service)}</span>
+        <span style="display:flex;align-items:center;gap:5px;white-space:nowrap">
+          <span style="font-size:12px;color:#64748b">Rate ₹</span>
+          <input type="number" min="0" step="1" value="${rateValue}" placeholder="Enter"
+            style="width:95px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-weight:600"
+            onchange="updateWorkDraftRate(${index},${itemIndex},this.value)"
+            oninput="updateWorkDraftRate(${index},${itemIndex},this.value)">
+        </span>
+      </div>`;
+    }).join("");
     return `<tr>
       <td><strong>${escapeHtml(draft.customerName)}</strong><br><small>${escapeHtml(draft.mobile||"-")}</small></td>
       <td>${workHtml}</td>
-      <td><strong>${money(knownTotal)}</strong>${hasBlank?'<br><small style="color:#b45309">Some rate(s) not set</small>':''}</td>
+      <td><strong>${money(knownTotal)}</strong>${hasBlank?'<br><small style="color:#b45309">Some rate(s) not set</small>':'<br><small style="color:#166534">All rates set</small>'}</td>
       <td><button class="btn btn-primary" onclick="loadWorkDraft(${index})">Approve Draft</button></td>
     </tr>`;
   }).join("");
 
   window._workDraftCache=drafts;
 }
+
+function updateWorkDraftRate(draftIndex,itemIndex,value){
+  const drafts=window._workDraftCache||[];
+  const draft=drafts[draftIndex];
+  if(!draft||!draft.items||!draft.items[itemIndex])return;
+
+  const item=draft.items[itemIndex];
+  const raw=String(value??"").trim();
+  if(raw===""){
+    item.rate=null;
+    item.amount=null;
+  }else{
+    const rate=Number(raw);
+    if(isNaN(rate)||rate<0)return;
+    item.rate=rate;
+    item.amount=Number(item.qty||1)*rate;
+  }
+
+  // Keep the edited draft in memory so Approve Draft uses the exact
+  // rates entered here. Re-rendering also refreshes the known total.
+  renderWorkDrafts();
+}
+
+window.updateWorkDraftRate=updateWorkDraftRate;
 
 function loadWorkDraft(index){
   const drafts=window._workDraftCache||getWorkDrafts();
