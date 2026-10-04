@@ -2323,25 +2323,56 @@ function renderWorkDrafts(){
   const tbody=document.getElementById("workDraftTable");
   if(!tbody)return;
 
-  const drafts=getWorkDrafts();
+  const freshDrafts=getWorkDrafts();
+  const previous=window._workDraftCache||[];
+  const previousMap=new Map();
+  previous.forEach(draft=>{
+    const key=customerKey(draft.customerName,draft.mobile);
+    (draft.items||[]).forEach(item=>previousMap.set(key+"||"+item.service,item));
+  });
+
+  const drafts=freshDrafts.map(draft=>{
+    const key=customerKey(draft.customerName,draft.mobile);
+    draft.items=(draft.items||[]).map(item=>{
+      const old=previousMap.get(key+"||"+item.service);
+      if(old){
+        item.qty=Number(old.qty)||1;
+        item.rate=old.rate===null||old.rate===undefined||old.rate===""?null:Number(old.rate);
+        item.amount=item.rate===null?null:item.qty*item.rate;
+      }else{
+        item.qty=Number(item.qty)||1;
+        item.amount=item.rate===null?null:item.qty*Number(item.rate);
+      }
+      return item;
+    });
+    return draft;
+  });
 
   if(!drafts.length){
     tbody.innerHTML=`<tr><td colspan="4" class="empty">No automatic work drafts available.</td></tr>`;
+    window._workDraftCache=[];
     return;
   }
 
   tbody.innerHTML=drafts.map((draft,index)=>{
     const knownTotal=draft.items.reduce((sum,item)=>{
       const rate=item.rate===null||item.rate===undefined||item.rate===""?null:Number(item.rate);
-      return sum+(rate===null||isNaN(rate)?0:Number(item.qty||1)*rate);
+      const qty=Math.max(1,Number(item.qty)||1);
+      return sum+(rate===null||isNaN(rate)?0:qty*rate);
     },0);
     const hasBlank=draft.items.some(item=>item.rate===null||item.rate===undefined||item.rate==="");
     const workHtml=draft.items.map((item,itemIndex)=>{
       const rateValue=item.rate===null||item.rate===undefined||item.rate===""?"":Number(item.rate);
+      const qtyValue=Math.max(1,Number(item.qty)||1);
       return `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px;padding:7px 0;border-bottom:1px dashed #e1e7ef">
         <span style="flex:1">${escapeHtml(item.service)}</span>
         <span style="display:flex;align-items:center;gap:5px;white-space:nowrap">
-          <span style="font-size:12px;color:#64748b">Rate ₹</span>
+          <span style="font-size:12px;color:#64748b">Qty</span>
+          <input type="number" min="1" step="1" value="${qtyValue}"
+            style="width:65px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-weight:600"
+            onchange="updateWorkDraftQty(${index},${itemIndex},this.value)"
+            oninput="updateWorkDraftQty(${index},${itemIndex},this.value)">
+          <span style="font-size:12px;color:#64748b;margin-left:6px">Rate ₹</span>
           <input type="number" min="0" step="1" value="${rateValue}" placeholder="Enter"
             style="width:95px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-weight:600"
             onchange="updateWorkDraftRate(${index},${itemIndex},this.value)"
@@ -2374,15 +2405,29 @@ function updateWorkDraftRate(draftIndex,itemIndex,value){
     const rate=Number(raw);
     if(isNaN(rate)||rate<0)return;
     item.rate=rate;
-    item.amount=Number(item.qty||1)*rate;
+    item.amount=Math.max(1,Number(item.qty)||1)*rate;
   }
 
-  // Keep the edited draft in memory so Approve Draft uses the exact
-  // rates entered here. Re-rendering also refreshes the known total.
+  // Refresh totals while preserving all manually edited Qty/Rate values.
+  renderWorkDrafts();
+}
+
+function updateWorkDraftQty(draftIndex,itemIndex,value){
+  const drafts=window._workDraftCache||[];
+  const draft=drafts[draftIndex];
+  if(!draft||!draft.items||!draft.items[itemIndex])return;
+
+  const item=draft.items[itemIndex];
+  const qty=Math.max(1,Math.floor(Number(value)||1));
+  item.qty=qty;
+  item.amount=item.rate===null||item.rate===undefined||item.rate===""?null:qty*Number(item.rate);
+
+  // Refresh totals while preserving all manually edited Qty/Rate values.
   renderWorkDrafts();
 }
 
 window.updateWorkDraftRate=updateWorkDraftRate;
+window.updateWorkDraftQty=updateWorkDraftQty;
 
 function loadWorkDraft(index){
   const drafts=window._workDraftCache||getWorkDrafts();
