@@ -216,6 +216,12 @@ font-weight:bold
 .delete-modal-box h3{margin:0 0 10px;color:#b9232b}
 .delete-modal-box p{margin:0 0 18px;line-height:1.5;color:#4b5563;white-space:pre-line}
 .delete-modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.task-manage-list{display:flex;flex-direction:column;gap:8px;margin:14px 0 18px;max-height:330px;overflow:auto}
+.task-manage-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #d9e1ec;border-radius:8px;background:#f8fafc}
+.task-manage-item small{display:block;color:#64748b;margin-top:2px}
+.task-manage-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.task-manage-input{width:100%;padding:10px 11px;border:1px solid #ccd7e5;border-radius:8px;background:#fff}
+
 .btn-warning{background:#fff4d8;color:#8c5a00}
 .btn-blue{background:#eaf2fb;color:#145c91}
 
@@ -1930,6 +1936,42 @@ Delete All Data
 
 <section id="printArea" style="display:none"></section>
 
+<div id="taskDeleteOptionsModal" class="delete-modal" onclick="if(event.target===this)closeTaskDeleteOptions()">
+<div class="delete-modal-box">
+<h3>Manage Customer Work</h3>
+<p id="taskDeleteOptionsMessage">Choose what you want to remove.</p>
+<div class="task-manage-actions" style="justify-content:flex-start">
+<button class="btn btn-danger" onclick="deleteEntireCustomerWork()">Delete All Work of This Customer</button>
+<button class="btn btn-light" onclick="openIndividualTaskDelete()">Delete Individual Work</button>
+<button class="btn btn-light" onclick="closeTaskDeleteOptions()">Cancel</button>
+</div>
+</div>
+</div>
+
+<div id="taskIndividualDeleteModal" class="delete-modal" onclick="if(event.target===this)closeIndividualTaskDelete()">
+<div class="delete-modal-box">
+<h3>Delete Individual Work</h3>
+<p>Select the particular work you want to delete.</p>
+<div id="taskIndividualDeleteList" class="task-manage-list"></div>
+<div class="task-manage-actions">
+<button class="btn btn-light" onclick="closeIndividualTaskDelete()">Back</button>
+</div>
+</div>
+</div>
+
+<div id="taskAddWorkModal" class="delete-modal" onclick="if(event.target===this)closeTaskAddWork()">
+<div class="delete-modal-box">
+<h3>Add Individual Work</h3>
+<p id="taskAddWorkMessage">Add a new work for this customer.</p>
+<input id="taskAddWorkInput" class="task-manage-input" list="taskAddWorkDatalist" placeholder="Search / type service name" autocomplete="off">
+<datalist id="taskAddWorkDatalist"></datalist>
+<div class="task-manage-actions" style="margin-top:16px">
+<button class="btn btn-light" onclick="closeTaskAddWork()">Cancel</button>
+<button class="btn btn-primary" onclick="confirmTaskAddWork()">＋ Add Work</button>
+</div>
+</div>
+</div>
+
 <div id="deleteCustomerModal" class="delete-modal" onclick="if(event.target===this)closeDeleteModal()">
 <div class="delete-modal-box">
 <h3>Confirm Customer Deletion</h3>
@@ -3640,7 +3682,12 @@ tbody.innerHTML=tasks.map(t=>{
 <td class="${t.priority==="High"?"priority-high":"priority-normal"}">${t.priority==="High"?"⚡ HIGH":"Normal"}</td>
 <td><span class="status ${taskStatusClass(displayStatus)}">${displayStatus}</span></td>
 <td>${escapeHtml(t.notes||"-")}</td>
-<td><button class="btn btn-danger" onclick="deleteTask('${t.id}')">Delete</button></td>
+<td>
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <button class="btn btn-light" onclick="openTaskAddWork('${t.id}')">＋ Add Work</button>
+    <button class="btn btn-danger" onclick="openTaskDeleteOptions('${t.id}')">Delete</button>
+  </div>
+</td>
 </tr>`;
 }).join("");
 }
@@ -3683,23 +3730,156 @@ function startTask(id){
 }
 
 
-function deleteTask(id){
+let pendingTaskManageId=null;
 
-if(!confirm(
-"Delete this work record?"
-))return;
-
-data.tasks=
-data.tasks.filter(t=>t.id!==id);
-
-saveData();
-
-renderTasks();
-renderWorkDrafts();
-
-updateDashboard();
-
+function openTaskDeleteOptions(id){
+  const task=data.tasks.find(t=>String(t.id)===String(id));
+  if(!task)return;
+  pendingTaskManageId=String(id);
+  const customer=String(task.customer||"this customer");
+  document.getElementById("taskDeleteOptionsMessage").textContent=
+    `Choose what you want to delete for ${customer}.\n\nYou can remove all work records of this customer or delete only one particular work.`;
+  document.getElementById("taskDeleteOptionsModal").classList.add("show");
 }
+
+function closeTaskDeleteOptions(){
+  pendingTaskManageId=null;
+  document.getElementById("taskDeleteOptionsModal").classList.remove("show");
+}
+
+function deleteEntireCustomerWork(){
+  if(!pendingTaskManageId)return;
+  const task=data.tasks.find(t=>String(t.id)===String(pendingTaskManageId));
+  if(!task){closeTaskDeleteOptions();return;}
+  const key=customerKey(task.customer,task.mobile);
+  const customer=task.customer||"this customer";
+  const count=data.tasks.filter(t=>customerKey(t.customer,t.mobile)===key).length;
+  if(!confirm(`Delete ALL work records of ${customer}?\n\nWork records: ${count}\n\nCustomer account, bills and payments will NOT be deleted. Only Work / Task records will be removed.`))return;
+
+  data.tasks=data.tasks.filter(t=>customerKey(t.customer,t.mobile)!==key);
+  saveData();
+  closeTaskDeleteOptions();
+  renderTasks();
+  renderWorkDrafts();
+  updateDashboard();
+  alert(`All work records of ${customer} have been deleted.`);
+}
+
+function openIndividualTaskDelete(){
+  if(!pendingTaskManageId)return;
+  const task=data.tasks.find(t=>String(t.id)===String(pendingTaskManageId));
+  if(!task)return;
+  const key=customerKey(task.customer,task.mobile);
+  const rows=[];
+  data.tasks.forEach(t=>{
+    if(customerKey(t.customer,t.mobile)!==key)return;
+    const list=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
+    list.forEach((service,index)=>{
+      rows.push(`<div class="task-manage-item"><div><strong>${escapeHtml(service)}</strong><small>${escapeHtml(t.customer||"")} • Received: ${displayDate(t.receivedDate)}</small></div><button class="btn btn-danger" onclick="deleteIndividualTaskService('${String(t.id)}',${index})">Delete</button></div>`);
+    });
+  });
+  document.getElementById("taskIndividualDeleteList").innerHTML=rows.length?rows.join(""):`<div class="empty">No individual work found.</div>`;
+  document.getElementById("taskDeleteOptionsModal").classList.remove("show");
+  document.getElementById("taskIndividualDeleteModal").classList.add("show");
+}
+
+function closeIndividualTaskDelete(){
+  document.getElementById("taskIndividualDeleteModal").classList.remove("show");
+  if(pendingTaskManageId){
+    document.getElementById("taskDeleteOptionsModal").classList.add("show");
+  }
+}
+
+function deleteIndividualTaskService(taskId,index){
+  const task=data.tasks.find(t=>String(t.id)===String(taskId));
+  if(!task)return;
+  const servicesList=Array.isArray(task.services)&&task.services.length?task.services:[String(task.service||"")].filter(Boolean);
+  const service=servicesList[index];
+  if(!service)return;
+  if(!confirm(`Delete this individual work?\n\n${service}\nCustomer: ${task.customer}\n\nOnly this work will be removed.`))return;
+
+  servicesList.splice(index,1);
+  if(!task.serviceStatus||typeof task.serviceStatus!=="object")task.serviceStatus={};
+  delete task.serviceStatus[service];
+  if(task.serviceBilled&&typeof task.serviceBilled==="object")delete task.serviceBilled[service];
+
+  if(!servicesList.length){
+    data.tasks=data.tasks.filter(t=>String(t.id)!==String(task.id));
+  }else{
+    task.services=servicesList;
+    task.service=servicesList.join(", ");
+    const doneCount=servicesList.filter(s=>!!task.serviceStatus[s]).length;
+    task.status=doneCount===servicesList.length?"DONE":doneCount>0?"IN PROGRESS":"PENDING";
+    task.completedDate=task.status==="DONE"?task.completedDate||todayISO():"";
+  }
+
+  saveData();
+  document.getElementById("taskIndividualDeleteModal").classList.remove("show");
+  document.getElementById("taskDeleteOptionsModal").classList.remove("show");
+  pendingTaskManageId=null;
+  renderTasks();
+  renderWorkDrafts();
+  updateDashboard();
+  alert("Individual work deleted successfully.");
+}
+
+function openTaskAddWork(id){
+  const task=data.tasks.find(t=>String(t.id)===String(id));
+  if(!task)return;
+  pendingTaskManageId=String(id);
+  document.getElementById("taskAddWorkMessage").textContent=`Add a new work for ${task.customer}.`;
+  const dl=document.getElementById("taskAddWorkDatalist");
+  dl.innerHTML=services.map(s=>`<option value="${escapeHtml(s)}"></option>`).join("");
+  document.getElementById("taskAddWorkInput").value="";
+  document.getElementById("taskAddWorkModal").classList.add("show");
+  setTimeout(()=>document.getElementById("taskAddWorkInput").focus(),50);
+}
+
+function closeTaskAddWork(){
+  document.getElementById("taskAddWorkModal").classList.remove("show");
+  pendingTaskManageId=null;
+}
+
+function confirmTaskAddWork(){
+  if(!pendingTaskManageId)return;
+  const task=data.tasks.find(t=>String(t.id)===String(pendingTaskManageId));
+  if(!task){closeTaskAddWork();return;}
+  const service=document.getElementById("taskAddWorkInput").value.trim();
+  const match=services.find(s=>s.toLowerCase()===service.toLowerCase());
+  if(!match){alert("Please select a valid service from the list.");return;}
+
+  const list=Array.isArray(task.services)&&task.services.length?task.services:([String(task.service||"")].filter(Boolean));
+  if(list.some(s=>String(s).toLowerCase()===match.toLowerCase())){
+    alert("This work is already added for this customer.");
+    return;
+  }
+
+  list.push(match);
+  task.services=list;
+  task.service=list.join(", ");
+  task.serviceStatus=task.serviceStatus&&typeof task.serviceStatus==="object"?task.serviceStatus:{};
+  task.serviceStatus[match]=false;
+  task.status="IN PROGRESS";
+  task.completedDate="";
+
+  saveData();
+  closeTaskAddWork();
+  renderTasks();
+  renderWorkDrafts();
+  updateDashboard();
+  alert(`${match} added successfully for ${task.customer}.`);
+}
+
+window.openTaskDeleteOptions=openTaskDeleteOptions;
+window.closeTaskDeleteOptions=closeTaskDeleteOptions;
+window.deleteEntireCustomerWork=deleteEntireCustomerWork;
+window.openIndividualTaskDelete=openIndividualTaskDelete;
+window.closeIndividualTaskDelete=closeIndividualTaskDelete;
+window.deleteIndividualTaskService=deleteIndividualTaskService;
+window.openTaskAddWork=openTaskAddWork;
+window.closeTaskAddWork=closeTaskAddWork;
+window.confirmTaskAddWork=confirmTaskAddWork;
+
 
 
 /* =========================================================
