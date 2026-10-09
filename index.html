@@ -1355,6 +1355,18 @@ style="width:130px;padding:7px;border:1px solid #ccd5e0;border-radius:6px"
 oninput="updateBillTotals()">
 </div>
 
+<div class="total-row" id="billDiscountRow" style="display:none">
+<span>Discount</span>
+<div style="display:flex;align-items:center;gap:8px">
+<span>₹</span>
+<input id="billDiscount" type="number" min="0" value="0" placeholder="Enter discount" style="width:130px;padding:7px;border:1px solid #ccd5e0;border-radius:6px" oninput="updateBillTotals()">
+<button type="button" class="btn btn-light no-print" onclick="toggleBillDiscount(false)" style="padding:6px 10px">Remove</button>
+</div>
+</div>
+<div style="margin:8px 0 12px" class="no-print" id="addDiscountButtonWrap">
+<button type="button" class="btn btn-light" id="addDiscountButton" onclick="toggleBillDiscount(true)">＋ Add Discount</button>
+</div>
+
 <div class="total-row">
 <span>Balance Due</span>
 <strong id="billDue">₹0</strong>
@@ -2537,6 +2549,9 @@ function loadWorkDraft(index){
   document.getElementById("billNo").value=generateBillNo(todayISO());
   document.getElementById("advancePaid").value=0;
   document.getElementById("paymentMode").value="UPI";
+  document.getElementById("billDiscount").value=0;
+  document.getElementById("billDiscountRow").style.display="none";
+  document.getElementById("addDiscountButtonWrap").style.display="block";
 
   currentBillItems=(draft.items||[]).map(item=>({
     service:item.service,
@@ -2820,6 +2835,8 @@ document.getElementById("customerName").value="";
 document.getElementById("customerMobile").value="";
 document.getElementById("advancePaid").value=0;
 document.getElementById("paymentMode").value="UPI";
+if(document.getElementById("billDiscount"))document.getElementById("billDiscount").value=0;
+if(document.getElementById("billDiscountRow")){document.getElementById("billDiscountRow").style.display="none";document.getElementById("addDiscountButtonWrap").style.display="block";}
 
 currentBillItems=[];
 currentBillDraftSource=[];
@@ -2966,11 +2983,30 @@ updateBillTotals();
 }
 
 
+function toggleBillDiscount(show){
+  const row=document.getElementById("billDiscountRow");
+  const buttonWrap=document.getElementById("addDiscountButtonWrap");
+  const input=document.getElementById("billDiscount");
+  if(!row||!buttonWrap||!input)return;
+  row.style.display=show?"flex":"none";
+  buttonWrap.style.display=show?"none":"block";
+  if(!show)input.value=0;
+  updateBillTotals();
+}
+
+function getBillDiscount(){
+  const row=document.getElementById("billDiscountRow");
+  if(!row||row.style.display==="none")return 0;
+  return Math.max(0,Number(document.getElementById("billDiscount").value)||0);
+}
+
 function updateBillTotals(){
 
-const total=currentBillItems.reduce(
-(s,i)=>s+i.amount,0
+const subtotal=currentBillItems.reduce(
+(s,i)=>s+(Number(i.amount)||0),0
 );
+const discount=Math.min(subtotal,getBillDiscount());
+const total=Math.max(0,subtotal-discount);
 
 let advance=Number(
 document.getElementById("advancePaid").value
@@ -3127,8 +3163,11 @@ if(!date){alert("Please select a bill date.");return;}
 if(!currentBillItems.length){alert("Please add at least one service.");return;}
 const blankRateItem=currentBillItems.find(i=>i.rate===null||i.rate===undefined||i.rate===""||isNaN(Number(i.rate)));
 if(blankRateItem){alert(`Please enter the rate for: ${blankRateItem.service}`);return;}
-const total=currentBillItems.reduce((s,i)=>s+Number(i.amount||0),0);
-if(directPaid>total){alert("Advance cannot be greater than total.");return;}
+const subtotal=currentBillItems.reduce((s,i)=>s+Number(i.amount||0),0);
+const discount=getBillDiscount();
+if(discount>subtotal){alert("Discount cannot be greater than the total amount.");return;}
+const total=Math.max(0,subtotal-discount);
+if(directPaid>total){alert("Advance cannot be greater than the final amount after discount.");return;}
 
 if(editingBillId){
  const bill=data.bills.find(b=>String(b.id)===String(editingBillId));
@@ -3136,7 +3175,7 @@ if(editingBillId){
  restoreBillAdvanceAllocations(bill);
  const oldCustomer=editingBillOriginalCustomer||{name:bill.customerName,mobile:bill.mobile};
  bill.customerName=name; bill.mobile=mobile; bill.date=date;
- bill.items=JSON.parse(JSON.stringify(currentBillItems)); bill.total=total;
+ bill.items=JSON.parse(JSON.stringify(currentBillItems)); bill.subtotal=subtotal; bill.discount=discount; bill.total=total;
  bill.directPaid=directPaid; bill.advanceUsed=0; bill.advanceAllocations=[];
  applyCustomerAdvanceToBill(bill,Math.max(0,total-directPaid));
  bill.paid=directPaid+Number(bill.advanceUsed||0);
@@ -3156,7 +3195,7 @@ if(editingBillId){
  alert(`Bill No. ${bill.billNo} has been updated successfully.`); window.scrollTo({top:0,behavior:"smooth"}); return;
 }
 
-const bill={id:Date.now().toString(),billNo:generateBillNo(date),date,customerName:name,mobile,items:JSON.parse(JSON.stringify(currentBillItems)),total,directPaid,advanceUsed:0,advanceAllocations:[],paid:directPaid,due:Math.max(0,total-directPaid),status:directPaid===total?"PAID":directPaid>0?"PARTIAL":"DUE",paymentMode:mode};
+const bill={id:Date.now().toString(),billNo:generateBillNo(date),date,customerName:name,mobile,items:JSON.parse(JSON.stringify(currentBillItems)),subtotal,discount,total,directPaid,advanceUsed:0,advanceAllocations:[],paid:directPaid,due:Math.max(0,total-directPaid),status:directPaid===total?"PAID":directPaid>0?"PARTIAL":"DUE",paymentMode:mode};
 applyCustomerAdvanceToBill(bill,Math.max(0,total-directPaid));
 bill.paid=directPaid+Number(bill.advanceUsed||0);
 bill.due=Math.max(0,total-bill.paid);
@@ -3209,6 +3248,9 @@ document.getElementById("billDate").value=bill.date||todayISO();
 document.getElementById("billNo").value=bill.billNo||"";
 document.getElementById("advancePaid").value=Number(bill.directPaid!==undefined?bill.directPaid:(Number(bill.paid||0)-Number(bill.advanceUsed||0)))||0;
 document.getElementById("paymentMode").value=bill.paymentMode||"UPI";
+document.getElementById("billDiscount").value=Number(bill.discount||0);
+document.getElementById("billDiscountRow").style.display=Number(bill.discount||0)>0?"flex":"none";
+document.getElementById("addDiscountButtonWrap").style.display=Number(bill.discount||0)>0?"none":"block";
 
 autoFillCustomerMobile("customerName","customerMobile");
 
@@ -3326,8 +3368,9 @@ const invoicePage1=`
 </table>
 
 <div class="total-box">
-<div class="total-row"><span>Total Amount</span><strong>${money(bill.total)}</strong></div>
+<div class="total-row"><span>Total Amount</span><strong>${money(Number(bill.subtotal!==undefined?bill.subtotal:bill.total))}</strong></div>
 <div class="total-row"><span>Advance Paid</span><strong>${money(bill.paid)}</strong></div>
+${Number(bill.discount||0)>0?`<div class="total-row"><span>Discount</span><strong>− ${money(bill.discount)}</strong></div><div class="total-row"><span>Final Amount</span><strong>${money(bill.total)}</strong></div>`:""}
 <div class="total-row balance-due-row"><span>Balance Due</span><strong>${money(bill.due)}</strong></div>
 <div class="total-row"><span>Payment Status</span><span class="status ${statusClass}">${bill.status}</span></div>
 </div>
@@ -3391,9 +3434,9 @@ message+=`${i+1}. ${item.service} | Qty: ${item.qty} | ${money(item.amount)}\n`;
 });
 
 message+=`
-Total Amount: ${money(bill.total)}
+Total Amount: ${money(Number(bill.subtotal!==undefined?bill.subtotal:bill.total))}
 Advance Paid: ${money(bill.paid)}
-Balance Due: ${money(bill.due)}
+${Number(bill.discount||0)>0?`Discount: -${money(bill.discount)}\nFinal Amount: ${money(bill.total)}\n`:""}Balance Due: ${money(bill.due)}
 Status: ${bill.status}
 
 Your Trusted Partner for Digital Services.
