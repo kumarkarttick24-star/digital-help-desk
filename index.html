@@ -1593,9 +1593,9 @@ Outstanding customer payments.
 
 <div class="panel">
   <h3>Add a Task</h3>
-  <form id="todoForm" onsubmit="addTodoTask(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+  <form id="todoForm" onsubmit="return addTodoTask(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <input id="todoInput" type="text" maxlength="300" placeholder="What work do you need to do?" required style="flex:1;min-width:220px">
-    <button class="btn btn-primary" type="submit">＋ Add Task</button>
+    <button class="btn btn-primary" type="button" onclick="return addTodoTask()">＋ Add Task</button>
   </form>
 </div>
 
@@ -3062,35 +3062,37 @@ function addTodoTask(event){
     event.preventDefault();
     event.stopPropagation();
   }
-  const input=document.getElementById("todoInput");
-  if(!input){
-    console.error("To Do List: task input was not found.");
-    return false;
-  }
-  const taskText=String(input.value||"").trim();
-  if(!taskText){
-    input.focus();
-    return false;
-  }
-  // Keep To Do items separate from existing billing/customer records.
-  if(!Array.isArray(data.todoItems)) data.todoItems=[];
-  data.todoItems.push({
-    id:Date.now().toString()+Math.random().toString(36).slice(2,7),
-    text:taskText,
-    createdAt:new Date().toISOString()
-  });
-  try{
+  try {
+    const input = document.getElementById("todoInput");
+    if (!input) {
+      alert("To Do input field was not found. Please refresh the page.");
+      return false;
+    }
+    const taskText = (input.value || "").trim();
+    if (!taskText) {
+      alert("Please enter a task first.");
+      input.focus();
+      return false;
+    }
+    if (!Array.isArray(data.todoItems)) data.todoItems = [];
+    data.todoItems.push({
+      id: "todo-" + Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8),
+      text: taskText,
+      createdAt: new Date().toISOString()
+    });
+    // Save the same application data object without touching billing/customer records.
     saveData();
-    input.value="";
+    input.value = "";
     renderTodoList();
     input.focus();
-  }catch(error){
-    console.error("Could not save/render To Do task:",error);
-    alert("Task add nahi ho paya. Please page reload karke dobara try karein.");
+    return false;
+  } catch (error) {
+    console.error("To Do List add failed:", error);
+    alert("Task could not be saved. Please check browser storage permissions and try again.");
+    return false;
   }
-  return false;
 }
-window.addTodoTask=addTodoTask;
+window.addTodoTask = addTodoTask;
 
 function completeTodoTask(id){
   if(!Array.isArray(data.todoItems)) data.todoItems=[];
