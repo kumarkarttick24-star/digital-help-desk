@@ -1010,30 +1010,12 @@ onclick="showPageById('dues')">
 
 
 <div class="panel">
-
-<h3>Recent Pending Works</h3>
-
-<div class="table-wrap">
-
-<table>
-
-<thead>
-<tr>
-<th>Customer</th>
-<th>Work</th>
-<th>Received</th>
-<th>Priority</th>
-<th>Status</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody id="dashboardTasks"></tbody>
-
-</table>
-
-</div>
-
+  <h3>To Do List <span id="dashboardTodoCount" style="font-size:14px;color:#687386;font-weight:500"></span></h3>
+  <form id="dashboardTodoForm" onsubmit="return addTodoTask(event, 'dashboardTodoInput')" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 18px">
+    <input id="dashboardTodoInput" type="text" maxlength="300" placeholder="What work do you need to do?" required style="flex:1;min-width:220px">
+    <button class="btn btn-primary" type="submit">＋ Add Task</button>
+  </form>
+  <div id="dashboardTodoList" style="display:flex;flex-direction:column;gap:10px"></div>
 </div>
 
 </section>
@@ -1593,9 +1575,9 @@ Outstanding customer payments.
 
 <div class="panel">
   <h3>Add a Task</h3>
-  <form id="todoForm" onsubmit="return addTodoTask(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+  <form id="todoForm" onsubmit="return addTodoTask(event, 'todoInput')" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <input id="todoInput" type="text" maxlength="300" placeholder="What work do you need to do?" required style="flex:1;min-width:220px">
-    <button class="btn btn-primary" type="button" onclick="return addTodoTask()">＋ Add Task</button>
+    <button class="btn btn-primary" type="submit">＋ Add Task</button>
   </form>
 </div>
 
@@ -2198,7 +2180,7 @@ document.querySelectorAll(".nav-btn")
 
 if(btn)btn.classList.add("active");
 
-if(id==="dashboard")updateDashboard();
+if(id==="dashboard"){updateDashboard();renderTodoList();}
 if(id==="newbill")renderWorkDrafts();
 if(id==="tasks")renderTasks();
 if(id==="customers")renderCustomers();
@@ -3057,40 +3039,28 @@ renderAdvances();
 updateAll();
 }
 
-function addTodoTask(event){
-  if(event){
-    event.preventDefault();
-    event.stopPropagation();
-  }
+function addTodoTask(event, inputId){
+  if(event){ event.preventDefault(); event.stopPropagation(); }
   try {
-    const input = document.getElementById("todoInput");
-    if (!input) {
-      alert("To Do input field was not found. Please refresh the page.");
-      return false;
-    }
+    const input = document.getElementById(inputId || "todoInput");
+    if (!input) { alert("To Do input field was not found. Please refresh the page."); return false; }
     const taskText = (input.value || "").trim();
-    if (!taskText) {
-      alert("Please enter a task first.");
-      input.focus();
-      return false;
-    }
+    if (!taskText) { alert("Please enter a task first."); input.focus(); return false; }
     if (!Array.isArray(data.todoItems)) data.todoItems = [];
     data.todoItems.push({
       id: "todo-" + Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8),
       text: taskText,
       createdAt: new Date().toISOString()
     });
-    // Save the same application data object without touching billing/customer records.
     saveData();
     input.value = "";
     renderTodoList();
     input.focus();
-    return false;
   } catch (error) {
     console.error("To Do List add failed:", error);
     alert("Task could not be saved. Please check browser storage permissions and try again.");
-    return false;
   }
+  return false;
 }
 window.addTodoTask = addTodoTask;
 
@@ -3113,19 +3083,23 @@ document.addEventListener("DOMContentLoaded",function(){
 });
 
 function renderTodoList(){
-  const list=document.getElementById("todoList");
-  const count=document.getElementById("todoCount");
-  if(!list)return;
   const items=Array.isArray(data.todoItems)?data.todoItems:[];
-  if(count)count.textContent=`(${items.length})`;
-  if(!items.length){
-    list.innerHTML='<div class="empty" style="padding:18px;text-align:center">You have no pending tasks. Add a task above.</div>';
-    return;
-  }
-  list.innerHTML=items.map(item=>`<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #dbe3ee;border-radius:10px;background:#fff;cursor:pointer">
-    <input type="checkbox" aria-label="Mark task complete" onchange="completeTodoTask('${String(item.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer">
-    <span style="flex:1;overflow-wrap:anywhere;line-height:1.5">${escapeHtml(item.text)}</span>
-  </label>`).join("");
+  const targets=[
+    {list:document.getElementById("todoList"),count:document.getElementById("todoCount")},
+    {list:document.getElementById("dashboardTodoList"),count:document.getElementById("dashboardTodoCount")}
+  ];
+  targets.forEach(({list,count})=>{
+    if(count)count.textContent=`(${items.length})`;
+    if(!list)return;
+    if(!items.length){
+      list.innerHTML='<div class="empty" style="padding:18px;text-align:center">You have no pending tasks. Add a task above.</div>';
+      return;
+    }
+    list.innerHTML=items.map(item=>`<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #dbe3ee;border-radius:10px;background:#fff;cursor:pointer">
+      <input type="checkbox" aria-label="Mark task complete" onchange="completeTodoTask('${String(item.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer">
+      <span style="flex:1;overflow-wrap:anywhere;line-height:1.5">${escapeHtml(item.text)}</span>
+    </label>`).join("");
+  });
 }
 
 
@@ -5128,6 +5102,7 @@ location.reload();
 function updateAll(){
 
 updateDashboard();
+renderTodoList();
 renderHistory();
 renderCustomers();
 renderDues();
