@@ -3058,22 +3058,57 @@ updateAll();
 }
 
 function addTodoTask(event){
-  if(event)event.preventDefault();
+  if(event){
+    event.preventDefault();
+    event.stopPropagation();
+  }
   const input=document.getElementById("todoInput");
-  const text=String(input?.value||"").trim();
-  if(!text)return;
-  data.todoItems.push({id:Date.now().toString()+Math.random().toString(36).slice(2,7),text,createdAt:new Date().toISOString()});
-  saveData();
-  input.value="";
-  renderTodoList();
-  input.focus();
+  if(!input){
+    console.error("To Do List: task input was not found.");
+    return false;
+  }
+  const taskText=String(input.value||"").trim();
+  if(!taskText){
+    input.focus();
+    return false;
+  }
+  // Keep To Do items separate from existing billing/customer records.
+  if(!Array.isArray(data.todoItems)) data.todoItems=[];
+  data.todoItems.push({
+    id:Date.now().toString()+Math.random().toString(36).slice(2,7),
+    text:taskText,
+    createdAt:new Date().toISOString()
+  });
+  try{
+    saveData();
+    input.value="";
+    renderTodoList();
+    input.focus();
+  }catch(error){
+    console.error("Could not save/render To Do task:",error);
+    alert("Task add nahi ho paya. Please page reload karke dobara try karein.");
+  }
+  return false;
 }
+window.addTodoTask=addTodoTask;
 
 function completeTodoTask(id){
+  if(!Array.isArray(data.todoItems)) data.todoItems=[];
   data.todoItems=data.todoItems.filter(item=>String(item.id)!==String(id));
   saveData();
   renderTodoList();
 }
+window.completeTodoTask=completeTodoTask;
+
+// Explicitly bind the form submit event as a reliable fallback to inline HTML handlers.
+document.addEventListener("DOMContentLoaded",function(){
+  const form=document.getElementById("todoForm");
+  if(form && !form.dataset.todoSubmitBound){
+    form.dataset.todoSubmitBound="1";
+    form.addEventListener("submit",addTodoTask);
+  }
+  renderTodoList();
+});
 
 function renderTodoList(){
   const list=document.getElementById("todoList");
