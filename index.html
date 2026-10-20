@@ -1542,6 +1542,15 @@ Outstanding customer payments.
 
 <div class="panel">
 
+<input
+  class="search"
+  id="dueSearch"
+  type="search"
+  placeholder="Search bill number, customer, date or amount..."
+  oninput="renderDues()"
+  autocomplete="off"
+  style="width:100%;max-width:530px;margin:0 0 18px">
+
 <div class="table-wrap">
 
 <table>
@@ -3107,10 +3116,10 @@ function renderTodoList(){
       const deadline=item.dueDate
         ? `<small style="display:inline-block;margin-top:5px;padding:3px 8px;border-radius:6px;background:#fff1e8;color:#9a3412;font-weight:600">Last date: ${escapeHtml(displayDate(item.dueDate))}</small>`
         : "";
-      return `<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #dbe3ee;border-radius:10px;background:#fff;cursor:pointer">
-        <input type="checkbox" aria-label="Mark task complete" onchange="completeTodoTask('${id}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer">
-        <span style="flex:1;overflow-wrap:anywhere;line-height:1.5">${escapeHtml(item.text)}${deadline ? `<br>${deadline}` : ""}</span>
-      </label>`;
+      return `<div style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #dbe3ee;border-radius:10px;background:#fff">
+        <input type="checkbox" aria-label="Mark task complete: ${escapeHtml(item.text)}" title="Tick this box to mark the task complete and remove it" onchange="completeTodoTask('${id}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer">
+        <span style="flex:1;overflow-wrap:anywhere;line-height:1.5;cursor:default;user-select:text">${escapeHtml(item.text)}${deadline ? `<br>${deadline}` : ""}</span>
+      </div>`;
     }).join("");
   });
 }
@@ -4509,71 +4518,61 @@ Delete
 
 function renderDues(){
 
-const bills=data.bills
-.filter(b=>b.due>0)
+const allBills=data.bills
+.filter(b=>Number(b.due)>0)
 .reverse();
 
-const total=bills.reduce(
-(s,b)=>s+b.due,0
+const total=allBills.reduce(
+(s,b)=>s+(Number(b.due)||0),0
 );
 
-document.getElementById("duePageTotal")
-.textContent=money(total);
+const totalEl=document.getElementById("duePageTotal");
+if(totalEl) totalEl.textContent=money(total);
 
+const tbody=document.getElementById("dueTable");
+if(!tbody)return;
 
-const tbody=
-document.getElementById("dueTable");
+const q=(document.getElementById("dueSearch")?.value||"").toLowerCase().trim();
 
+const bills=allBills.filter(b=>{
+  if(!q)return true;
+  const haystack=[
+    b.billNo,
+    b.customerName,
+    displayDate(b.date),
+    b.date,
+    money(b.total),
+    money(b.paid),
+    money(b.due),
+    String(b.total??""),
+    String(b.paid??""),
+    String(b.due??"")
+  ].join(" ").toLowerCase();
+  return haystack.includes(q);
+});
 
 if(!bills.length){
-
-tbody.innerHTML=
-`<tr>
-<td colspan="7" class="empty">
-No outstanding payments.
-</td>
-</tr>`;
-
-return;
-
+  tbody.innerHTML=`<tr><td colspan="7" class="empty">${allBills.length ? "No matching due payments found." : "No outstanding payments."}</td></tr>`;
+  return;
 }
 
-
-tbody.innerHTML=
-bills.map(
-b=>`
-
+tbody.innerHTML=bills.map(b=>`
 <tr>
-
-<td>${b.billNo}</td>
-
-<td>${escapeHtml(b.customerName)}</td>
-
+<td>${escapeHtml(String(b.billNo??""))}</td>
+<td>${escapeHtml(String(b.customerName??""))}</td>
 <td>${displayDate(b.date)}</td>
-
 <td>${money(b.total)}</td>
-
 <td>${money(b.paid)}</td>
-
+<td><strong>${money(b.due)}</strong></td>
 <td>
-<strong>${money(b.due)}</strong>
-</td>
-
-<td>
-
-<button class="btn btn-warning"
-onclick="addPayment('${b.id}')">
+<button class="btn btn-warning" onclick="addPayment('${String(b.id).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}')">
 Add Payment
 </button>
-
 </td>
-
 </tr>
-
 `).join("");
 
 }
-
 
 function addPayment(id){
 
