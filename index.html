@@ -886,10 +886,6 @@ WhatsApp: 7327933225
 💰 Due Payments
 </button>
 
-<button class="nav-btn" onclick="showPage('todo',this)">
-📝 To Do List
-</button>
-
 <button class="nav-btn" onclick="showPage('services',this)">
 🛠️ Services & Rates
 </button>
@@ -1415,10 +1411,17 @@ Customer-wise billing summary.
 
 <div class="panel">
 
-<input class="search"
-id="customerSearch"
-placeholder="Search customer or mobile..."
-oninput="renderCustomers()">
+<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+  <input class="search"
+  id="customerSearch"
+  placeholder="Search customer or mobile..."
+  oninput="renderCustomers()"
+  style="flex:1;min-width:240px;max-width:530px;margin:0">
+  <div style="margin-left:auto;min-width:150px;padding:12px 18px;border:1px solid #dbe3ee;border-radius:12px;background:#f4f8fd">
+    <div style="font-size:12px;font-weight:700;color:#687386;text-transform:uppercase;letter-spacing:.3px">Total Customers</div>
+    <div id="totalCustomerCount" style="font-size:26px;font-weight:800;color:#173f78;line-height:1.35">0</div>
+  </div>
+</div>
 
 <div class="table-wrap" style="margin-top:18px">
 
@@ -1566,27 +1569,7 @@ Outstanding customer payments.
 </section>
 
 
-<!-- TO DO LIST -->
 
-<section id="todo" class="page">
-
-<h2 class="page-title">To Do List</h2>
-<p class="page-subtitle">Add the work you need to do. Tick a task when it is finished and it will be removed from this list.</p>
-
-<div class="panel">
-  <h3>Add a Task</h3>
-  <form id="todoForm" onsubmit="return addTodoTask(event, 'todoInput')" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-    <input id="todoInput" type="text" maxlength="300" placeholder="What work do you need to do?" required style="flex:1;min-width:220px">
-    <button class="btn btn-primary" type="submit">＋ Add Task</button>
-  </form>
-</div>
-
-<div class="panel">
-  <h3>Pending Tasks <span id="todoCount" style="font-size:14px;color:#687386;font-weight:500"></span></h3>
-  <div id="todoList" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
-</div>
-
-</section>
 
 
 <!-- SERVICES -->
@@ -4438,7 +4421,11 @@ ensureCustomerAggregate(key,t.customer,t.mobile,0);
 map[key].tasks++;
 });
 
-const customers=Object.values(map)
+const allCustomers=Object.values(map);
+const totalCountEl=document.getElementById("totalCustomerCount");
+if(totalCountEl)totalCountEl.textContent=allCustomers.length;
+
+const customers=allCustomers
 .filter(c=>
 !q||
 c.name.toLowerCase().includes(q)||
