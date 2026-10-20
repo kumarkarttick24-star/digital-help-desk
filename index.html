@@ -2086,17 +2086,23 @@ data.rates[s]="";
 
 
 function saveData(){
+  // Always save locally first. Local storage remains usable if the network is down.
+  try {
+    localStorage.setItem(KEY, JSON.stringify(data));
+  } catch (error) {
+    console.error("Local save failed:", error);
+    showSyncNotice("Local save failed. Export a backup and free browser storage.", true);
+    return false;
+  }
 
-localStorage.setItem(
-KEY,
-JSON.stringify(data)
-);
-
-/* Cloud sync runs automatically after login. */
-if(typeof cloudSyncSave==="function"){
-cloudSyncSave();
-}
-
+  // Queue cloud writes so rapid edits cannot finish out of order.
+  if (typeof cloudSyncSave === "function" && getCloudToken()) {
+    cloudSyncSave().catch(error => {
+      console.error("Cloud save failed:", error);
+      showSyncNotice("Saved on this device, but cloud sync failed. Keep a backup and check your connection.", true);
+    });
+  }
+  return true;
 }
 
 
@@ -5146,16 +5152,15 @@ return headers;
 }
 
 async function apiRequest(path,options={}){
-const response=await fetch(
-API_BASE+path,
-{
-...options,
-headers:{
-...cloudHeaders(!!options.body),
-...(options.headers||{})
+let response;
+try{
+  response=await fetch(API_BASE+path,{
+    ...options,
+    headers:{...cloudHeaders(!!options.body),...(options.headers||{})}
+  });
+}catch(networkError){
+  throw new Error("Cannot reach the cloud server. Check internet, hosting status, and API/CORS configuration. Local data is still saved on this device.");
 }
-}
-);
 
 let result=null;
 
@@ -5431,134 +5436,147 @@ updateAll();
 
 }catch(error){
 
-setCloudToken("");
-
-authMessage(
-"error",
-error.message||"Login failed."
-);
+console.error("Login/data restore failed:",error);
+authMessage("error",error.message||"Login failed. Your local data was preserved.");
 }
 }
 
+
+/* Cloud sync safety helpers */
+const LOCAL_RECOVERY_KEY = KEY + "_recovery_before_cloud_restore_v1";
+let cloudSaveQueue = Promise.resolve();
+let syncNoticeTimer = null;
+
+function showSyncNotice(message, isError=false){
+  let notice=document.getElementById("dhdSyncNotice");
+  if(!notice){
+    notice=document.createElement("div");
+    notice.id="dhdSyncNotice";
+    notice.setAttribute("role","status");
+    notice.style.cssText="position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;max-width:min(92vw,620px);padding:12px 16px;border-radius:10px;background:#172033;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.24);font:600 13px/1.45 system-ui,sans-serif;display:none;text-align:center";
+    document.body.appendChild(notice);
+  }
+  notice.textContent=message;
+  notice.style.background=isError?"#8b1e2d":"#174d35";
+  notice.style.display="block";
+  if(syncNoticeTimer)clearTimeout(syncNoticeTimer);
+  syncNoticeTimer=setTimeout(()=>{notice.style.display="none";},isError?9000:3500);
+}
+
+function recordCount(snapshot){
+  if(!snapshot || typeof snapshot!=="object")return 0;
+  return ["bills","tasks","customers","customerAdvances","todoItems","deletedCustomers","deletedWorkDrafts"].reduce((sum,key)=>sum+(Array.isArray(snapshot[key])?snapshot[key].length:0),0);
+}
+
+function saveLocalRecoverySnapshot(snapshot=data){
+  try{
+    localStorage.setItem(LOCAL_RECOVERY_KEY,JSON.stringify({savedAt:new Date().toISOString(),data:snapshot}));
+  }catch(error){
+    console.warn("Could not create local recovery snapshot:",error);
+  }
+}
+
+function normalizeCloudData(cloudData){
+  const normalized={...cloudData};
+  normalized.bills=Array.isArray(normalized.bills)?normalized.bills:[];
+  normalized.tasks=Array.isArray(normalized.tasks)?normalized.tasks:[];
+  normalized.tasks.forEach(t=>{
+    const list=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
+    t.services=list;
+    if(!t.serviceStatus || typeof t.serviceStatus!=="object")t.serviceStatus={};
+    list.forEach(name=>{if(t.serviceStatus[name]===undefined)t.serviceStatus[name]=t.status==="DONE";});
+    if(!t.serviceBilled || typeof t.serviceBilled!=="object")t.serviceBilled={};
+  });
+  normalized.customers=Array.isArray(normalized.customers)?normalized.customers:[];
+  normalized.deletedCustomers=Array.isArray(normalized.deletedCustomers)?normalized.deletedCustomers:[];
+  normalized.customerAdvances=Array.isArray(normalized.customerAdvances)?normalized.customerAdvances:[];
+  normalized.deletedWorkDrafts=Array.isArray(normalized.deletedWorkDrafts)?normalized.deletedWorkDrafts:[];
+  normalized.todoItems=Array.isArray(normalized.todoItems)?normalized.todoItems:[];
+  normalized.rates=normalized.rates&&typeof normalized.rates==="object"?normalized.rates:{};
+  normalized.settings=normalized.settings&&typeof normalized.settings==="object"?normalized.settings:{
+    business:"DIGITAL HELP DESK",name:"KARTTICK CHANDRA PATRA",whatsapp:"7327933225",qr:""
+  };
+  normalized.extraServices=Array.isArray(normalized.extraServices)?normalized.extraServices:[];
+  return normalized;
+}
 
 async function cloudSyncSave(){
+  const token=getCloudToken();
+  if(!token)return false;
 
-const token=getCloudToken();
+  // Capture an immutable snapshot for this save; don't serialize a moving object later.
+  let snapshot;
+  try{snapshot=JSON.stringify(data);}catch(error){throw new Error("Could not prepare data for cloud save.");}
 
-if(!token)return;
-
-try{
-
-await apiRequest(
-"/sync.php",
-{
-method:"POST",
-body:JSON.stringify(data)
+  cloudSaveQueue=cloudSaveQueue.catch(()=>{}).then(async()=>{
+    // If user logged out/switched account while waiting, don't send data under a different session.
+    if(getCloudToken()!==token)throw new Error("Cloud session changed before save completed.");
+    await apiRequest("/sync.php",{method:"POST",body:snapshot});
+    if(getCloudToken()===token)showSyncNotice("Cloud sync complete.");
+    return true;
+  });
+  return cloudSaveQueue;
 }
-);
-
-}catch(error){
-
-console.warn(
-"Cloud save failed:",
-error.message
-);
-}
-}
-
 
 async function loadCloudData(isNewAccount=false){
+  const token=getCloudToken();
+  if(!token)throw new Error("Session expired. Please sign in again.");
 
-const token=getCloudToken();
+  const result=await apiRequest("/sync.php",{method:"GET"});
+  const cloudData=result && result.data;
+  const localSnapshot=JSON.parse(JSON.stringify(data));
+  const localCount=recordCount(localSnapshot);
+  const hasValidCloudData=cloudData && typeof cloudData==="object" && !Array.isArray(cloudData) &&
+    ["bills","tasks","customers","customerAdvances","todoItems"].some(key=>Array.isArray(cloudData[key]));
 
-if(!token){
-throw new Error("Session expired. Please sign in again.");
+  // A brand-new account should receive the current browser data, if any.
+  if(isNewAccount && !hasValidCloudData){
+    saveLocalRecoverySnapshot(localSnapshot);
+    await cloudSyncSave();
+    return;
+  }
+
+  if(!hasValidCloudData){
+    if(localCount>0){
+      saveLocalRecoverySnapshot(localSnapshot);
+      await cloudSyncSave();
+      showSyncNotice("Cloud data was empty or unreadable. Your local data was preserved and sent for sync.",true);
+    }
+    return;
+  }
+
+  const normalizedCloud=normalizeCloudData(cloudData);
+  const cloudCount=recordCount(normalizedCloud);
+
+  // Never silently replace a fuller local dataset with an empty/older cloud response.
+  // Save a recovery snapshot before attempting to repair cloud data.
+  if(localCount>cloudCount){
+    saveLocalRecoverySnapshot(localSnapshot);
+    data=localSnapshot;
+    localStorage.setItem(KEY,JSON.stringify(data));
+    await cloudSyncSave();
+    renderWorkDrafts();
+    showSyncNotice("Cloud had fewer records. Kept your local data and backed it up before syncing.",true);
+    return;
+  }
+
+  // If the cloud response has no actual records but this is an existing account,
+  // do not overwrite useful local data (including settings/rates) with a blank payload.
+  if(cloudCount===0 && localCount>0){
+    saveLocalRecoverySnapshot(localSnapshot);
+    data=localSnapshot;
+    localStorage.setItem(KEY,JSON.stringify(data));
+    await cloudSyncSave();
+    renderWorkDrafts();
+    showSyncNotice("Empty cloud data detected. Your local records were preserved.",true);
+    return;
+  }
+
+  saveLocalRecoverySnapshot(localSnapshot);
+  data=normalizedCloud;
+  localStorage.setItem(KEY,JSON.stringify(data));
+  renderWorkDrafts();
 }
-
-const result=await apiRequest(
-"/sync.php",
-{
-method:"GET"
-}
-);
-
-const cloudData=result.data;
-
-if(
-cloudData &&
-typeof cloudData==="object" &&
-(
-Array.isArray(cloudData.bills)||
-Array.isArray(cloudData.tasks)||
-Array.isArray(cloudData.customers)
-)
-){
-
-data=cloudData;
-
-data.bills=Array.isArray(data.bills)?data.bills:[];
-data.tasks=Array.isArray(data.tasks)?data.tasks:[];
-data.tasks.forEach(t=>{
-  const list=Array.isArray(t.services)&&t.services.length?t.services:[String(t.service||"")].filter(Boolean);
-  t.services=list;
-  if(!t.serviceStatus || typeof t.serviceStatus!=="object")t.serviceStatus={};
-  list.forEach(name=>{if(t.serviceStatus[name]===undefined)t.serviceStatus[name]=t.status==="DONE";});
-  if(!t.serviceBilled || typeof t.serviceBilled!=="object")t.serviceBilled={};
-});
-data.customers=Array.isArray(data.customers)?data.customers:[];
-data.deletedCustomers=
-Array.isArray(data.deletedCustomers)?
-data.deletedCustomers:[];
-data.customerAdvances=
-Array.isArray(data.customerAdvances)?data.customerAdvances:[];
-data.deletedWorkDrafts=
-Array.isArray(data.deletedWorkDrafts)?data.deletedWorkDrafts:[];
-
-data.rates=data.rates||{};
-data.settings=data.settings||{
-business:"DIGITAL HELP DESK",
-name:"KARTTICK CHANDRA PATRA",
-whatsapp:"7327933225",
-qr:""
-};
-
-data.extraServices=
-Array.isArray(data.extraServices)?
-data.extraServices:[];
-
-localStorage.setItem(
-KEY,
-JSON.stringify(data)
-);
-
-renderWorkDrafts();
-return;
-}
-
-/*
- * First account setup:
- * if this browser already has useful local data,
- * upload it to the new cloud account.
- */
-if(isNewAccount || !cloudData){
-
-const hasLocalData=
-data.bills.length||
-data.tasks.length||
-data.customers.length||
-Object.keys(data.rates||{}).length;
-
-if(hasLocalData){
-
-await cloudSyncSave();
-
-}else{
-
-await cloudSyncSave();
-}
-}
-}
-
 
 async function restoreCloudSession(){
 
@@ -5593,12 +5611,11 @@ updateAll();
 
 }catch(error){
 
-setCloudToken("");
-
-document.getElementById("authOverlay")
-.style.display="flex";
-
+// Keep the session token on transient cloud/data errors; local data remains intact.
+console.error("Session restore failed:",error);
+document.getElementById("authOverlay").style.display="flex";
 showAuthForm("signin");
+authMessage("error",error.message||"Could not restore cloud data. Your local data was preserved.");
 }
 }
 
