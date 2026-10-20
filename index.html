@@ -1007,8 +1007,10 @@ onclick="showPageById('dues')">
 
 <div class="panel">
   <h3>To Do List <span id="dashboardTodoCount" style="font-size:14px;color:#687386;font-weight:500"></span></h3>
-  <form id="dashboardTodoForm" onsubmit="return addTodoTask(event, 'dashboardTodoInput')" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 18px">
+  <form id="dashboardTodoForm" onsubmit="return addTodoTask(event, 'dashboardTodoInput', 'dashboardTodoDueDate')" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 18px">
     <input id="dashboardTodoInput" type="text" maxlength="300" placeholder="What work do you need to do?" required style="flex:1;min-width:220px">
+    <label for="dashboardTodoDueDate" style="font-size:12px;color:#687386;white-space:nowrap">Last date (optional)</label>
+    <input id="dashboardTodoDueDate" type="date" aria-label="Task last date (optional)" title="Set a last date if this task has a deadline" style="padding:10px;border:1px solid #ccd5e0;border-radius:7px;min-width:145px">
     <button class="btn btn-primary" type="submit">＋ Add Task</button>
   </form>
   <div id="dashboardTodoList" style="display:flex;flex-direction:column;gap:10px"></div>
@@ -3028,21 +3030,25 @@ renderAdvances();
 updateAll();
 }
 
-function addTodoTask(event, inputId){
+function addTodoTask(event, inputId, dueDateId){
   if(event){ event.preventDefault(); event.stopPropagation(); }
   try {
     const input = document.getElementById(inputId || "todoInput");
+    const dueDateInput = document.getElementById(dueDateId || "todoDueDate");
     if (!input) { alert("To Do input field was not found. Please refresh the page."); return false; }
     const taskText = (input.value || "").trim();
     if (!taskText) { alert("Please enter a task first."); input.focus(); return false; }
     if (!Array.isArray(data.todoItems)) data.todoItems = [];
+    const dueDate = dueDateInput ? String(dueDateInput.value || "") : "";
     data.todoItems.push({
       id: "todo-" + Date.now().toString() + "-" + Math.random().toString(36).slice(2, 8),
       text: taskText,
+      dueDate: dueDate,
       createdAt: new Date().toISOString()
     });
     saveData();
     input.value = "";
+    if (dueDateInput) dueDateInput.value = "";
     renderTodoList();
     input.focus();
   } catch (error) {
@@ -3063,16 +3069,28 @@ window.completeTodoTask=completeTodoTask;
 
 // Explicitly bind the form submit event as a reliable fallback to inline HTML handlers.
 document.addEventListener("DOMContentLoaded",function(){
-  const form=document.getElementById("todoForm");
+  const form=document.getElementById("dashboardTodoForm");
   if(form && !form.dataset.todoSubmitBound){
     form.dataset.todoSubmitBound="1";
-    form.addEventListener("submit",addTodoTask);
+    form.addEventListener("submit",function(event){
+      addTodoTask(event, "dashboardTodoInput", "dashboardTodoDueDate");
+    });
   }
   renderTodoList();
 });
 
 function renderTodoList(){
   const items=Array.isArray(data.todoItems)?data.todoItems:[];
+  // Dated tasks always appear first, earliest deadline first. Undated tasks follow.
+  // Existing tasks without dueDate remain valid and are treated as normal tasks.
+  const sortedItems=[...items].sort((a,b)=>{
+    const ad=String(a.dueDate||"");
+    const bd=String(b.dueDate||"");
+    if(ad && bd) return ad.localeCompare(bd) || String(a.createdAt||"").localeCompare(String(b.createdAt||""));
+    if(ad) return -1;
+    if(bd) return 1;
+    return String(a.createdAt||"").localeCompare(String(b.createdAt||""));
+  });
   const targets=[
     {list:document.getElementById("todoList"),count:document.getElementById("todoCount")},
     {list:document.getElementById("dashboardTodoList"),count:document.getElementById("dashboardTodoCount")}
@@ -3080,17 +3098,22 @@ function renderTodoList(){
   targets.forEach(({list,count})=>{
     if(count)count.textContent=`(${items.length})`;
     if(!list)return;
-    if(!items.length){
+    if(!sortedItems.length){
       list.innerHTML='<div class="empty" style="padding:18px;text-align:center">You have no pending tasks. Add a task above.</div>';
       return;
     }
-    list.innerHTML=items.map(item=>`<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #dbe3ee;border-radius:10px;background:#fff;cursor:pointer">
-      <input type="checkbox" aria-label="Mark task complete" onchange="completeTodoTask('${String(item.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer">
-      <span style="flex:1;overflow-wrap:anywhere;line-height:1.5">${escapeHtml(item.text)}</span>
-    </label>`).join("");
+    list.innerHTML=sortedItems.map(item=>{
+      const id=String(item.id||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+      const deadline=item.dueDate
+        ? `<small style="display:inline-block;margin-top:5px;padding:3px 8px;border-radius:6px;background:#fff1e8;color:#9a3412;font-weight:600">Last date: ${escapeHtml(displayDate(item.dueDate))}</small>`
+        : "";
+      return `<label style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid #dbe3ee;border-radius:10px;background:#fff;cursor:pointer">
+        <input type="checkbox" aria-label="Mark task complete" onchange="completeTodoTask('${id}')" style="width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer">
+        <span style="flex:1;overflow-wrap:anywhere;line-height:1.5">${escapeHtml(item.text)}${deadline ? `<br>${deadline}` : ""}</span>
+      </label>`;
+    }).join("");
   });
 }
-
 
 function renderAdvances(){
 const q=(document.getElementById("advanceSearch")?.value||"").toLowerCase().trim();
