@@ -894,6 +894,10 @@ WhatsApp: 7327933225
 📊 Reports
 </button>
 
+<button class="nav-btn" onclick="showPage('tuitionManagement',this)">
+🎓 Tuition Management
+</button>
+
 <button class="nav-btn" onclick="showPage('settings',this)">
 ⚙️ Settings
 </button>
@@ -1956,6 +1960,122 @@ Delete All Data
 </div>
 </div>
 
+
+<!-- TUITION MANAGEMENT: isolated module, independent from business data -->
+<section id="tuitionManagement" class="page">
+  <h2 class="page-title">Tuition Management</h2>
+  <p class="page-subtitle">CBSE Class XI Physics & Mathematics | Independent teaching, syllabus and assessment records</p>
+  <div class="cards" id="tuitionSummaryCards"></div>
+  <div class="panel" style="margin-top:18px">
+    <h3>Overall Syllabus Progress</h3>
+    <div id="tuitionOverallProgress"></div>
+    <div class="grid2" style="margin-top:14px">
+      <div id="tuitionPhysicsProgress"></div>
+      <div id="tuitionMathProgress"></div>
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:18px">
+    <button class="panel" type="button" onclick="openTuitionSubject('Physics')" style="text-align:left;cursor:pointer;border-top:4px solid #2563eb">
+      <h3 style="color:#1d4ed8">PHYSICS</h3><p>14 chapters · Class records · Tests · Homework</p><div id="tuitionPhysicsCardProgress"></div>
+    </button>
+    <button class="panel" type="button" onclick="openTuitionSubject('Mathematics')" style="text-align:left;cursor:pointer;border-top:4px solid #0f9d75">
+      <h3 style="color:#0f766e">MATHEMATICS</h3><p>14 chapters · Class records · Tests · Homework</p><div id="tuitionMathCardProgress"></div>
+    </button>
+  </div>
+</section>
+
+<section id="tuitionSubject" class="page">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+    <button class="btn btn-light" type="button" onclick="showPageById('tuitionManagement')">← Tuition Dashboard</button>
+    <h2 class="page-title" id="tuitionSubjectTitle" style="margin:0">Physics Management</h2>
+  </div>
+  <p class="page-subtitle" id="tuitionSubjectSubtitle">Subject records are stored separately.</p>
+
+  <div class="cards" id="tuitionSubjectCards"></div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>1. Class Records / Teaching Log</h3>
+    <form id="tuitionClassForm" onsubmit="saveTuitionClass(event)">
+      <input type="hidden" id="tuitionClassEditId">
+      <div class="grid2">
+        <div class="field"><label>Date of Class</label><input id="tcDate" type="date" required></div>
+        <div class="field"><label>Chapter</label><select id="tcChapter" required></select></div>
+        <div class="field"><label>Topics Covered</label><textarea id="tcTopics" required></textarea></div>
+        <div class="field"><label>Portion Completed</label><input id="tcPortion" placeholder="e.g. Exercise 1.1, examples 1-4"></div>
+        <div class="field"><label>Student Understanding</label><select id="tcUnderstanding"><option>Good</option><option>Average</option><option>Needs Improvement</option></select></div>
+        <div class="field"><label>Homework Assigned</label><textarea id="tcHomework"></textarea></div>
+        <div class="field" style="grid-column:1/-1"><label>Teacher's Remarks</label><textarea id="tcRemarks"></textarea></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" type="submit">Save Class Record</button><button class="btn btn-light" type="button" onclick="resetTuitionForm('tuitionClassForm')">Clear</button></div>
+    </form>
+    <div id="tuitionClassTable" style="margin-top:16px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>2. Next Class Planner</h3>
+    <form id="tuitionPlanForm" onsubmit="saveTuitionPlan(event)">
+      <div class="grid2">
+        <div class="field"><label>Next Class Date</label><input id="tpDate" type="date"></div>
+        <div class="field"><label>Next Chapter / Topic</label><select id="tpChapter"></select></div>
+        <div class="field"><label>Topics to Teach</label><textarea id="tpTopics"></textarea></div>
+        <div class="field"><label>Previous Class Revision</label><textarea id="tpRevision"></textarea></div>
+        <div class="field"><label>Pending Homework</label><textarea id="tpHomework"></textarea></div>
+        <div class="field"><label>My Own Preparation Requirements</label><textarea id="tpPreparation"></textarea></div>
+        <div class="field" style="grid-column:1/-1"><label>Additional Notes</label><textarea id="tpNotes"></textarea></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" type="submit">Save / Update Plan</button></div>
+    </form>
+    <div id="tuitionPlanSaved" style="margin-top:10px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>3. Syllabus Tracker</h3>
+    <p class="page-subtitle">Chapter completion is manual. Adding a class record does not automatically complete a chapter.</p>
+    <div id="tuitionSyllabusTable"></div>
+  </div>
+
+  <div class="panel">
+    <h3>4. Examination & Test Tracker</h3>
+    <p class="page-subtitle">Each chapter test is out of 30 marks: MCQs 20 + Written Numerical/Application 10. Schedule after preparation, in the next scheduled tuition class.</p>
+    <form id="tuitionTestForm" onsubmit="saveTuitionTest(event)">
+      <input type="hidden" id="ttEditId">
+      <div class="grid2">
+        <div class="field"><label>Test Date</label><input id="ttDate" type="date" required></div>
+        <div class="field"><label>Chapter</label><select id="ttChapter" required></select></div>
+        <div class="field"><label>Conceptual MCQs (out of 20)</label><input id="ttMcq" type="number" min="0" max="20" step="0.5" required></div>
+        <div class="field"><label>Written Numerical / Application (out of 10)</label><input id="ttWritten" type="number" min="0" max="10" step="0.5" required></div>
+        <div class="field"><label>Mistakes and Weak Concepts</label><textarea id="ttMistakes"></textarea></div>
+        <div class="field"><label>Next Revision Requirement</label><textarea id="ttRevision"></textarea></div>
+        <div class="field" style="grid-column:1/-1"><label>Teacher's Remarks</label><textarea id="ttRemarks"></textarea></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" type="submit">Save Test Record</button><button class="btn btn-light" type="button" onclick="resetTuitionForm('tuitionTestForm')">Clear</button></div>
+    </form>
+    <div id="tuitionTestTable" style="margin-top:16px"></div>
+  </div>
+
+  <div class="panel">
+    <h3>5. Student Performance & Analytics</h3>
+    <div id="tuitionAnalytics"></div>
+  </div>
+
+  <div class="panel">
+    <h3>6. Homework Tracker</h3>
+    <form id="tuitionHomeworkForm" onsubmit="saveTuitionHomework(event)">
+      <input type="hidden" id="thEditId">
+      <div class="grid2">
+        <div class="field"><label>Homework Assigned Date</label><input id="thDate" type="date" required></div>
+        <div class="field"><label>Chapter</label><select id="thChapter" required></select></div>
+        <div class="field"><label>Questions / Tasks Assigned</label><textarea id="thTasks" required></textarea></div>
+        <div class="field"><label>Submission Status</label><select id="thStatus"><option>Pending</option><option>Completed</option></select></div>
+        <div class="field"><label>Homework Quality</label><select id="thQuality"><option value="">Not evaluated</option><option>Excellent</option><option>Good</option><option>Average</option><option>Needs Improvement</option></select></div>
+        <div class="field"><label>Teacher's Remarks</label><textarea id="thRemarks"></textarea></div>
+      </div>
+      <div class="actions"><button class="btn btn-primary" type="submit">Save Homework</button><button class="btn btn-light" type="button" onclick="resetTuitionForm('tuitionHomeworkForm')">Clear</button></div>
+    </form>
+    <div id="tuitionHomeworkTable" style="margin-top:16px"></div>
+  </div>
+</section>
+
 </main>
 </div>
 
@@ -2242,6 +2362,8 @@ if(id==="customers")renderCustomers();
 if(id==="history")renderHistory();
 if(id==="dues")renderDues();
 if(id==="todo")renderTodoList();
+if(id==="tuitionManagement")renderTuitionDashboard();
+if(id==="tuitionSubject")renderTuitionSubject();
 if(id==="services")renderServices();
 if(id==="reports")updateReports();
 if(id==="settings")loadSettings();
@@ -5880,6 +6002,210 @@ renderServices();
 loadSettings();
 
 restoreCloudSession();
+
+
+/* =========================================================
+   TUITION MANAGEMENT - isolated local module
+   Separate localStorage key; no mutation of business data,
+   cloud payload, authentication, or existing backup/restore.
+========================================================= */
+const TUITION_DATA_KEY = "dhd_tuition_management_v1";
+const TUITION_CHAPTERS = {
+  Physics: [
+    "Units and Measurements","Motion in a Straight Line","Motion in a Plane","Laws of Motion",
+    "Work, Energy and Power","System of Particles and Rotational Motion","Gravitation",
+    "Mechanical Properties of Solids","Mechanical Properties of Fluids","Thermal Properties of Matter",
+    "Thermodynamics","Kinetic Theory","Oscillations","Waves"
+  ],
+  Mathematics: [
+    "Sets","Relations and Functions","Trigonometric Functions","Complex Numbers and Quadratic Equations",
+    "Linear Inequalities","Permutations and Combinations","Binomial Theorem","Sequences and Series",
+    "Straight Lines","Conic Sections","Introduction to Three Dimensional Geometry",
+    "Limits and Derivatives","Statistics","Probability"
+  ]
+};
+let tuitionData = loadTuitionData();
+let activeTuitionSubject = "Physics";
+
+function emptyTuitionSubject(){
+  return {classes:[],plan:{},chapters:TUITION_CHAPTERS[activeTuitionSubject].map((name,i)=>({
+    id:"ch-"+(i+1),name,status:"Not Started",startDate:"",targetDate:"",actualDate:"",percentage:0,notes:""
+  })),tests:[],homework:[]};
+}
+function loadTuitionData(){
+  try{
+    const raw=localStorage.getItem(TUITION_DATA_KEY);
+    const parsed=raw?JSON.parse(raw):{};
+    const result={version:1,subjects:{}};
+    ["Physics","Mathematics"].forEach(subject=>{
+      const saved=parsed?.subjects?.[subject]||{};
+      const names=TUITION_CHAPTERS[subject];
+      const savedChapters=Array.isArray(saved.chapters)?saved.chapters:[];
+      result.subjects[subject]={
+        classes:Array.isArray(saved.classes)?saved.classes:[],
+        plan:saved.plan&&typeof saved.plan==="object"?saved.plan:{},
+        chapters:names.map((name,i)=>{
+          const prior=savedChapters.find(c=>c.name===name)||{};
+          return {id:"ch-"+(i+1),name,status:["Not Started","In Progress","Completed"].includes(prior.status)?prior.status:"Not Started",
+            startDate:prior.startDate||"",targetDate:prior.targetDate||"",actualDate:prior.actualDate||"",
+            percentage:Math.max(0,Math.min(100,Number(prior.percentage)||0)),notes:prior.notes||""};
+        }),
+        tests:Array.isArray(saved.tests)?saved.tests:[],
+        homework:Array.isArray(saved.homework)?saved.homework:[]
+      };
+    });
+    return result;
+  }catch(error){
+    console.error("Tuition data could not be read:",error);
+    return {version:1,subjects:{Physics:emptyTuitionSubject(),Mathematics:emptyTuitionSubject()}};
+  }
+}
+function saveTuitionData(){
+  try{
+    localStorage.setItem(TUITION_DATA_KEY,JSON.stringify(tuitionData));
+    return true;
+  }catch(error){
+    console.error("Tuition data save failed:",error);
+    alert("Tuition record save nahi hua. Browser storage space check karein.");
+    return false;
+  }
+}
+function tuitionSubjectData(subject=activeTuitionSubject){return tuitionData.subjects[subject];}
+function tuitionEscape(value){
+  return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function tuitionDate(value){if(!value)return "–";const p=String(value).split("-");return p.length===3?`${p[2]}-${p[1]}-${p[0]}`:value;}
+function tuitionPct(value){return `${Math.round(Number(value)||0)}%`;}
+function tuitionProgress(subject){
+  const chapters=tuitionSubjectData(subject).chapters;
+  const completed=chapters.filter(c=>c.status==="Completed").length;
+  const avg=chapters.length?chapters.reduce((s,c)=>s+(Number(c.percentage)||0),0)/chapters.length:0;
+  return {completed,avg,classes:tuitionSubjectData(subject).classes.length,tests:tuitionSubjectData(subject).tests.length};
+}
+function tuitionBar(label,pct,color){
+  return `<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:8px"><strong>${tuitionEscape(label)}</strong><span>${tuitionPct(pct)}</span></div><div style="height:10px;background:#e7edf5;border-radius:20px;overflow:hidden"><div style="height:100%;width:${Math.max(0,Math.min(100,pct))}%;background:${color};border-radius:20px"></div></div></div>`;
+}
+function renderTuitionDashboard(){
+  const p=tuitionProgress("Physics"),m=tuitionProgress("Mathematics");
+  const totalCompleted=p.completed+m.completed;
+  const totalClasses=p.classes+m.classes,totalTests=p.tests+m.tests;
+  const cards=[
+    ["Total Chapters in Syllabus","28"],["Chapters Completed",String(totalCompleted)],
+    ["Classes Conducted",String(totalClasses)],["Tests Conducted",String(totalTests)]
+  ];
+  document.getElementById("tuitionSummaryCards").innerHTML=cards.map(([l,v])=>`<div class="card"><div class="label">${l}</div><div class="value">${v}</div></div>`).join("");
+  document.getElementById("tuitionOverallProgress").innerHTML=tuitionBar("Overall Syllabus",totalCompleted/28*100,"#2563eb");
+  document.getElementById("tuitionPhysicsProgress").innerHTML=tuitionBar(`Physics Progress: ${p.completed}/14`,p.completed/14*100,"#2563eb");
+  document.getElementById("tuitionMathProgress").innerHTML=tuitionBar(`Mathematics Progress: ${m.completed}/14`,m.completed/14*100,"#0f9d75");
+  document.getElementById("tuitionPhysicsCardProgress").innerHTML=tuitionBar(`${p.completed}/14 chapters completed`,p.completed/14*100,"#2563eb");
+  document.getElementById("tuitionMathCardProgress").innerHTML=tuitionBar(`${m.completed}/14 chapters completed`,m.completed/14*100,"#0f9d75");
+}
+function openTuitionSubject(subject){
+  if(!TUITION_CHAPTERS[subject])return;
+  activeTuitionSubject=subject;
+  renderTuitionSubject();
+  showPageById("tuitionSubject");
+}
+function renderTuitionSubject(){
+  const subject=activeTuitionSubject, d=tuitionSubjectData(subject), p=tuitionProgress(subject);
+  document.getElementById("tuitionSubjectTitle").textContent=subject+" Management";
+  document.getElementById("tuitionSubjectSubtitle").textContent=`${p.completed}/14 chapters completed · ${p.classes} classes · ${p.tests} tests`;
+  document.getElementById("tuitionSubjectCards").innerHTML=[
+    ["Chapters Completed",`${p.completed}/14`],["Classes Conducted",p.classes],["Tests Conducted",p.tests],["Syllabus Progress",tuitionPct(p.avg)]
+  ].map(([l,v])=>`<div class="card"><div class="label">${l}</div><div class="value">${v}</div></div>`).join("");
+  ["tcChapter","tpChapter","ttChapter","thChapter"].forEach(id=>{
+    const el=document.getElementById(id),current=el.value;
+    el.innerHTML=TUITION_CHAPTERS[subject].map(c=>`<option value="${tuitionEscape(c)}">${tuitionEscape(c)}</option>`).join("");
+    if(current && TUITION_CHAPTERS[subject].includes(current))el.value=current;
+  });
+  renderTuitionClasses();renderTuitionPlan();renderTuitionSyllabus();renderTuitionTests();renderTuitionAnalytics();renderTuitionHomework();
+}
+function resetTuitionForm(id){const f=document.getElementById(id);if(f)f.reset();if(id==="tuitionClassForm")document.getElementById("tuitionClassEditId").value="";if(id==="tuitionTestForm")document.getElementById("ttEditId").value="";if(id==="tuitionHomeworkForm")document.getElementById("thEditId").value="";}
+function saveTuitionClass(event){
+  event.preventDefault();const d=tuitionSubjectData(),id=document.getElementById("tuitionClassEditId").value;
+  const record={id:id||("cl-"+Date.now()),date:tcDate.value,chapter:tcChapter.value,topics:tcTopics.value.trim(),portion:tcPortion.value.trim(),understanding:tcUnderstanding.value,homework:tcHomework.value.trim(),remarks:tcRemarks.value.trim()};
+  if(id){const i=d.classes.findIndex(x=>x.id===id);if(i>=0)d.classes[i]=record;}else d.classes.unshift(record);
+  if(saveTuitionData()){resetTuitionForm("tuitionClassForm");renderTuitionSubject();renderTuitionDashboard();}
+}
+function renderTuitionClasses(){
+  const rows=tuitionSubjectData().classes;
+  document.getElementById("tuitionClassTable").innerHTML=rows.length?`<div class="table-wrap"><table><thead><tr><th>Date</th><th>Chapter / Topics</th><th>Portion</th><th>Understanding</th><th>Homework / Remarks</th><th>Action</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${tuitionDate(r.date)}</td><td><b>${tuitionEscape(r.chapter)}</b><br>${tuitionEscape(r.topics)}</td><td>${tuitionEscape(r.portion)}</td><td>${tuitionEscape(r.understanding)}</td><td>${tuitionEscape(r.homework)}<br>${tuitionEscape(r.remarks)}</td><td><button class="btn btn-light" onclick="editTuitionRecord('class','${r.id}')">Edit</button></td></tr>`).join("")}</tbody></table></div>`:"<p>No class records yet.</p>";
+}
+function renderTuitionPlan(){
+  const p=tuitionSubjectData().plan||{};
+  ["tpDate","tpChapter","tpTopics","tpRevision","tpHomework","tpPreparation","tpNotes"].forEach(id=>{
+    const key={tpDate:"date",tpChapter:"chapter",tpTopics:"topics",tpRevision:"revision",tpHomework:"homework",tpPreparation:"preparation",tpNotes:"notes"}[id];
+    document.getElementById(id).value=p[key]||"";
+  });
+  document.getElementById("tuitionPlanSaved").innerHTML=p.updatedAt?`<small>Last updated: ${new Date(p.updatedAt).toLocaleString()}</small>`:"No next class plan saved.";
+}
+function saveTuitionPlan(event){
+  event.preventDefault();const d=tuitionSubjectData();
+  d.plan={date:tpDate.value,chapter:tpChapter.value,topics:tpTopics.value,revision:tpRevision.value,homework:tpHomework.value,preparation:tpPreparation.value,notes:tpNotes.value,updatedAt:new Date().toISOString()};
+  if(saveTuitionData())renderTuitionPlan();
+}
+function renderTuitionSyllabus(){
+  const chapters=tuitionSubjectData().chapters;
+  document.getElementById("tuitionSyllabusTable").innerHTML=`<div class="table-wrap"><table><thead><tr><th>Chapter</th><th>Status</th><th>Start Date</th><th>Target Date</th><th>Actual Completion</th><th>Progress</th><th>Important Notes</th></tr></thead><tbody>${chapters.map((c,i)=>`<tr><td>${i+1}. ${tuitionEscape(c.name)}</td><td><select onchange="updateTuitionChapter(${i},'status',this.value)"><option ${c.status==="Not Started"?"selected":""}>Not Started</option><option ${c.status==="In Progress"?"selected":""}>In Progress</option><option ${c.status==="Completed"?"selected":""}>Completed</option></select></td><td><input type="date" value="${tuitionEscape(c.startDate)}" onchange="updateTuitionChapter(${i},'startDate',this.value)"></td><td><input type="date" value="${tuitionEscape(c.targetDate)}" onchange="updateTuitionChapter(${i},'targetDate',this.value)"></td><td><input type="date" value="${tuitionEscape(c.actualDate)}" onchange="updateTuitionChapter(${i},'actualDate',this.value)"></td><td><input type="number" min="0" max="100" value="${Number(c.percentage)||0}" style="width:76px" onchange="updateTuitionChapter(${i},'percentage',this.value)">%</td><td><input value="${tuitionEscape(c.notes)}" onchange="updateTuitionChapter(${i},'notes',this.value)" placeholder="Notes"></td></tr>`).join("")}</tbody></table></div>`;
+}
+function updateTuitionChapter(index,key,value){
+  const c=tuitionSubjectData().chapters[index];if(!c)return;
+  c[key]=key==="percentage"?Math.max(0,Math.min(100,Number(value)||0)):value;
+  if(key==="status"&&value==="Completed"){c.percentage=100;if(!c.actualDate)c.actualDate=todayISO();}
+  if(key==="status"&&value!=="Completed"&&c.percentage===100)c.percentage=key==="status"?0:c.percentage;
+  if(saveTuitionData()){renderTuitionSyllabus();renderTuitionDashboard();document.getElementById("tuitionSubjectCards").innerHTML=(()=>{const p=tuitionProgress(activeTuitionSubject);return [["Chapters Completed",`${p.completed}/14`],["Classes Conducted",p.classes],["Tests Conducted",p.tests],["Syllabus Progress",tuitionPct(p.avg)]].map(([l,v])=>`<div class="card"><div class="label">${l}</div><div class="value">${v}</div></div>`).join("")})(); }
+}
+function saveTuitionTest(event){
+  event.preventDefault();const d=tuitionSubjectData(),id=ttEditId.value,mcq=Number(ttMcq.value),written=Number(ttWritten.value);
+  if(mcq<0||mcq>20||written<0||written>10){alert("MCQ marks 0-20 aur written marks 0-10 ke beech hone chahiye.");return;}
+  const r={id:id||("te-"+Date.now()),date:ttDate.value,chapter:ttChapter.value,mcq,written,total:mcq+written,percentage:(mcq+written)/30*100,mistakes:ttMistakes.value,revision:ttRevision.value,remarks:ttRemarks.value};
+  if(id){const i=d.tests.findIndex(x=>x.id===id);if(i>=0)d.tests[i]=r;}else d.tests.unshift(r);
+  if(saveTuitionData()){resetTuitionForm("tuitionTestForm");renderTuitionSubject();renderTuitionDashboard();}
+}
+function renderTuitionTests(){
+  const rows=tuitionSubjectData().tests;
+  document.getElementById("tuitionTestTable").innerHTML=rows.length?`<div class="table-wrap"><table><thead><tr><th>Date</th><th>Chapter</th><th>MCQ</th><th>Written</th><th>Total / 30</th><th>%</th><th>Weak Concepts / Revision / Remarks</th><th>Action</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${tuitionDate(r.date)}</td><td>${tuitionEscape(r.chapter)}</td><td>${r.mcq}/20</td><td>${r.written}/10</td><td><b>${r.total}/30</b></td><td>${Number(r.percentage).toFixed(1)}%</td><td>${tuitionEscape(r.mistakes)}<br>${tuitionEscape(r.revision)}<br>${tuitionEscape(r.remarks)}</td><td><button class="btn btn-light" onclick="editTuitionRecord('test','${r.id}')">Edit</button></td></tr>`).join("")}</tbody></table></div>`:"<p>No test records yet. Analytics will appear after actual tests are recorded.</p>";
+}
+function renderTuitionAnalytics(){
+  const tests=tuitionSubjectData().tests;
+  if(!tests.length){document.getElementById("tuitionAnalytics").innerHTML="<p>No actual test data available yet. Performance analytics will be calculated after tests are entered.</p>";return;}
+  const avg=tests.reduce((s,t)=>s+Number(t.total||0),0)/tests.length;
+  const byChapter={};tests.forEach(t=>(byChapter[t.chapter]??=[]).push(Number(t.total)||0));
+  const chapterRows=Object.entries(byChapter).map(([name,scores])=>({name,avg:scores.reduce((a,b)=>a+b,0)/scores.length,count:scores.length})).sort((a,b)=>a.avg-b.avg);
+  const months={};tests.forEach(t=>{const k=(t.date||"").slice(0,7)||"Undated";(months[k]??=[]).push(Number(t.total)||0);});
+  const monthly=Object.entries(months).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>`${tuitionEscape(k)}: ${(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)}/30`).join(" · ");
+  const sorted=[...tests].sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+  const first=sorted[0],last=sorted[sorted.length-1],improvement=sorted.length>1?Number(last.total)-Number(first.total):null;
+  const bars=chapterRows.map(r=>`<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;gap:10px"><span>${tuitionEscape(r.name)}</span><b>${r.avg.toFixed(1)}/30</b></div><div style="height:9px;background:#e7edf5;border-radius:10px"><div style="height:9px;width:${r.avg/30*100}%;background:#2563eb;border-radius:10px"></div></div></div>`).join("");
+  document.getElementById("tuitionAnalytics").innerHTML=`<div class="cards"><div class="card"><div class="label">Overall Average</div><div class="value">${avg.toFixed(1)}/30</div></div><div class="card"><div class="label">Average Percentage</div><div class="value">${(avg/30*100).toFixed(1)}%</div></div><div class="card"><div class="label">Score Improvement</div><div class="value">${improvement===null?"–":(improvement>0?"+":"")+improvement.toFixed(1)+" marks"}</div></div><div class="card"><div class="label">Tests Recorded</div><div class="value">${tests.length}</div></div></div><h4>Chapter-wise Test Score Comparison / Weakest Chapters</h4>${bars}<h4>Monthly Performance</h4><p>${monthly}</p><h4>Test Score History</h4><div class="table-wrap"><table><thead><tr><th>Date</th><th>Chapter</th><th>Score</th><th>Percentage</th></tr></thead><tbody>${sorted.map(t=>`<tr><td>${tuitionDate(t.date)}</td><td>${tuitionEscape(t.chapter)}</td><td>${t.total}/30</td><td>${Number(t.percentage).toFixed(1)}%</td></tr>`).join("")}</tbody></table></div>`;
+}
+function saveTuitionHomework(event){
+  event.preventDefault();const d=tuitionSubjectData(),id=thEditId.value;
+  const r={id:id||("hw-"+Date.now()),date:thDate.value,chapter:thChapter.value,tasks:thTasks.value,status:thStatus.value,quality:thQuality.value,remarks:thRemarks.value};
+  if(id){const i=d.homework.findIndex(x=>x.id===id);if(i>=0)d.homework[i]=r;}else d.homework.unshift(r);
+  if(saveTuitionData()){resetTuitionForm("tuitionHomeworkForm");renderTuitionHomework();}
+}
+function renderTuitionHomework(){
+  const rows=tuitionSubjectData().homework;
+  document.getElementById("tuitionHomeworkTable").innerHTML=rows.length?`<div class="table-wrap"><table><thead><tr><th>Assigned</th><th>Chapter</th><th>Questions / Tasks</th><th>Status</th><th>Quality</th><th>Remarks</th><th>Action</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${tuitionDate(r.date)}</td><td>${tuitionEscape(r.chapter)}</td><td>${tuitionEscape(r.tasks)}</td><td><select onchange="updateTuitionHomeworkStatus('${r.id}',this.value)"><option ${r.status==="Pending"?"selected":""}>Pending</option><option ${r.status==="Completed"?"selected":""}>Completed</option></select></td><td>${tuitionEscape(r.quality)}</td><td>${tuitionEscape(r.remarks)}</td><td><button class="btn btn-light" onclick="editTuitionRecord('homework','${r.id}')">Edit</button></td></tr>`).join("")}</tbody></table></div>`:"<p>No homework assigned yet.</p>";
+}
+function updateTuitionHomeworkStatus(id,status){const r=tuitionSubjectData().homework.find(x=>x.id===id);if(r){r.status=status;saveTuitionData();}}
+function editTuitionRecord(type,id){
+  const d=tuitionSubjectData();
+  if(type==="class"){
+    const r=d.classes.find(x=>x.id===id);if(!r)return;
+    tuitionClassEditId.value=r.id;tcDate.value=r.date;tcChapter.value=r.chapter;tcTopics.value=r.topics;tcPortion.value=r.portion;tcUnderstanding.value=r.understanding;tcHomework.value=r.homework;tcRemarks.value=r.remarks;
+    document.getElementById("tuitionClassForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }else if(type==="test"){
+    const r=d.tests.find(x=>x.id===id);if(!r)return;
+    ttEditId.value=r.id;ttDate.value=r.date;ttChapter.value=r.chapter;ttMcq.value=r.mcq;ttWritten.value=r.written;ttMistakes.value=r.mistakes;ttRevision.value=r.revision;ttRemarks.value=r.remarks;
+    document.getElementById("tuitionTestForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }else{
+    const r=d.homework.find(x=>x.id===id);if(!r)return;
+    thEditId.value=r.id;thDate.value=r.date;thChapter.value=r.chapter;thTasks.value=r.tasks;thStatus.value=r.status;thQuality.value=r.quality;thRemarks.value=r.remarks;
+    document.getElementById("tuitionHomeworkForm").scrollIntoView({behavior:"smooth",block:"start"});
+  }
+}
 
 </script>
 
